@@ -72,8 +72,8 @@ external DFSVisit_external = {
     function visitVertex (c : VertexSet, e : Vertex) : VertexSet;
     function visitedVertices (c : State) : VertexSet;
 
-    procedure set (upd c : Tuple2, obs e : VertexStack);
-    procedure set (upd c : Tuple2, obs e : VertexSet);
+    procedure setE1 (upd c : Tuple2, obs e : VertexStack);
+    procedure setE2 (upd c : Tuple2, obs e : VertexSet);
     procedure setVertexStack (upd c : State, obs e : VertexStack);
 
     procedure setVisitedVertices (upd c : State, obs e : VertexSet);
@@ -182,3 +182,37 @@ program DFSVisit = {
     //    assert isEmpty(v);
     //}
 }
+
+/*external Tup = {
+    require type E1;
+    require type E2;
+    type Tuple;
+
+    function construct(e1: E1, e2: E2) : Tuple;
+    function p1(t: Tuple): E1;
+    function p2(t: Tuple): E2;
+}
+
+external Tup3 = {
+    require type E1;
+    require type E2;
+    require type E3;
+    type Tuple;
+  
+    function construct(e1: E1, e2: E2, e3: E3) : Tuple;
+    function p1(t: Tuple): E1;
+    function p2(t: Tuple): E2;
+    function p3(t: Tuple): E3;
+}
+
+implementation I = {
+    use Tup;
+    use Tup3;
+}
+
+implementation I2 = {
+    use Tup;
+
+    require type E3;
+    external function p3(t: Tuple): E3;
+};*/

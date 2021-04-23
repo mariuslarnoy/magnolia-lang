@@ -111,12 +111,14 @@ concept Tuple2 = {
         [ Container => Tuple2
         , Element => E1
         , projection => fst
+        , set => setE1
         ];
 
     use RWContainer
         [ Container => Tuple2
         , Element => E2
         , projection => snd
+        , set => setE2
         ];
 
     function mkTuple2(e1: E1, e2: E2) : Tuple2;
