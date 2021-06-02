@@ -13,10 +13,10 @@ import System.Console.Haskeline
 
 import Env
 import Make
-import Parser
-import PPrint
-import Syntax
-import Util
+import Magnolia.Parser
+import Magnolia.PPrint
+import Magnolia.Syntax
+import Magnolia.Util
 
 type TopEnv = TcGlobalEnv
 data Status = Failure | Success -- TODO: move and expand statuses
@@ -58,7 +58,8 @@ codegen filename env = case M.lookup (mkPkgNameFromPath filename) env of
 compile :: String -> IO (Status, TopEnv)
 compile filename = do
   -- TODO: replace "ExceptT" with (Status, TopEnv) to allow partial success
-  (result, errs) <- runMgMonad (loadDependencyGraph filename >>= upsweep)
+  (result, errs) <-
+    runMgMonad (loadDependencyGraph filename >>= upsweepAndCodegen)
   case result of
     Left _ -> pprintList (L.sort (toList errs)) >> return (Failure, M.empty)
     Right env -> if null errs then return (Success, env)

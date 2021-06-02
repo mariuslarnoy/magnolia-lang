@@ -1,6 +1,7 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Make (loadDependencyGraph, upsweep, TcGlobalEnv) where
+module Make (loadDependencyGraph, upsweep, upsweepAndCodegen, TcGlobalEnv) where
 
 import Control.Monad (foldM, unless)
 import Control.Monad.IO.Class (liftIO)
@@ -9,16 +10,52 @@ import qualified Data.List as L
 import qualified Data.Map as M
 import qualified Data.Text.Lazy as T
 
-import Check
+import Cxx.Syntax
 import Env
-import Parser
-import PPrint
-import Syntax
-import Util
+import Magnolia.Check
+import Magnolia.Parser
+import Magnolia.PPrint
+import Magnolia.Syntax
+import Magnolia.Util
+import MgToCxx
 
 type TcGlobalEnv = Env (MPackage PhCheck)
+type CxxCodegenEnv = M.Map FullyQualifiedName (CxxModule, [(TcTypeDecl, CxxName)])
 
--- TODO: recover when tcing?
+upsweepAndCodegen :: [G.SCC PackageHead] -> MgMonad TcGlobalEnv
+upsweepAndCodegen = (fst <$>) . foldMAccumErrorsAndFail go (M.empty, M.empty)
+  where
+    -- TODO: keep going?
+    go
+      :: (TcGlobalEnv, CxxCodegenEnv)
+      -> G.SCC PackageHead
+      -> MgMonad (TcGlobalEnv, CxxCodegenEnv)
+    go _ (G.CyclicSCC pkgHead) =
+      let pCycle = T.intercalate ", " $ map (pshow . _packageHeadName) pkgHead
+      in throwNonLocatedE CyclicErr pCycle
+
+    go (globalEnv, inCxxModules) (G.AcyclicSCC pkgHead) =
+      let pkgName = fromFullyQualifiedName (_packageHeadName pkgHead)
+      in enter pkgName $ do
+        Ann ann (MPackage name decls deps) <-
+          parsePackage (_packageHeadPath pkgHead) (_packageHeadStr pkgHead)
+        -- TODO: add local/external ann for nodes
+        importedEnv <- foldM (loadDependency globalEnv) M.empty deps
+        -- 1. Renamings BROKEN
+        envWithRenamings <- upsweepNamedRenamings importedEnv $
+          topSortTopLevelE name (getNamedRenamings decls)
+        -- TODO: deal with renamings first, then modules, then satisfactions
+        -- 2. Modules
+        (tcModulesNOTFINISHED, outCxxModules) <- upsweepAndCodegenModules
+            pkgName (envWithRenamings, inCxxModules) $
+            topSortTopLevelE name (getModules decls)
+        -- 3. Satisfactions
+        -- TODO: ^
+        -- TODO: deal with deps and other tld types
+        let tcPackage = Ann ann (MPackage name tcModulesNOTFINISHED [])
+        return (M.insert name tcPackage globalEnv, outCxxModules)
+
+
 upsweep :: [G.SCC PackageHead] -> MgMonad TcGlobalEnv
 upsweep = foldMAccumErrorsAndFail go M.empty
   where
@@ -35,6 +72,29 @@ upsweep = foldMAccumErrorsAndFail go M.empty
         pkg <- parsePackage (_packageHeadPath pkgHead) (_packageHeadStr pkgHead)
         tcPkg <- checkPackage env pkg
         return $ M.insert (nodeName pkg) tcPkg env
+
+upsweepAndCodegenModules
+  :: Name
+  -> (Env [TcTopLevelDecl], CxxCodegenEnv)
+  -> [G.SCC (MModule PhParse)]
+  -> MgMonad (Env [TcTopLevelDecl], CxxCodegenEnv)
+upsweepAndCodegenModules pkgName = foldMAccumErrors go
+  where
+    go
+      :: (Env [TcTopLevelDecl], CxxCodegenEnv)
+      -> G.SCC (MModule PhParse)
+      -> MgMonad (Env [TcTopLevelDecl], CxxCodegenEnv)
+    go _ (G.CyclicSCC modules) =
+      let mCycle = T.intercalate ", " $ map (pshow . nodeName) modules in
+      throwNonLocatedE CyclicErr mCycle
+
+    -- TODO: error catching & recovery
+    go (env, cxxModules) (G.AcyclicSCC modul) = do
+      tcModule <- checkModule env modul
+      let fqModuleName = FullyQualifiedName (Just pkgName) (nodeName modul)
+      moduleCxx <- mgToCxx (fqModuleName, tcModule) cxxModules
+      return ( M.insertWith (<>) (nodeName modul) [MModuleDecl tcModule] env
+             , M.insert fqModuleName moduleCxx cxxModules)
 
 -- TODO: cache and choose what to reload with granularity
 -- | Takes the path towards a Magnolia package and constructs its dependency
