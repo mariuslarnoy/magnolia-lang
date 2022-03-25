@@ -53,6 +53,10 @@ namespace pde_cpp {
 
 
 
+    PDEProgram::_forall_ix_snippet_cuda PDEProgram::forall_ix_snippet_cuda;
+
+
+
     PDEProgram::_forall_ix_snippet_threaded PDEProgram::forall_ix_snippet_threaded;
 
 

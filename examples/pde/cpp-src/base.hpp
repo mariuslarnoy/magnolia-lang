@@ -16,10 +16,10 @@
 
 struct array_ops {
   typedef float Float;
-  struct Offset { int value; };
-  struct Axis { size_t value; };
+  struct Offset { int value = 1; };
+  struct Axis { size_t value = 1; };
   typedef size_t Index;
-  struct Nat { size_t value; };
+  struct Nat { size_t value = 1; };
 
   struct Array {
     std::unique_ptr<Float[]> content;
@@ -161,12 +161,12 @@ struct array_ops {
     return 0;
   }
 
-  inline Axis zero_axis() { return Axis(0); }
-  inline Axis one_axis() { return Axis(1); }
-  inline Axis two_axis() { return Axis(2); }
+  inline Axis zero_axis() {auto a = Axis(); a.value = 0; return a; }
+  inline Axis one_axis() { auto a = Axis(); a.value = 1; return a; }
+  inline Axis two_axis() { auto a = Axis(); a.value = 2; return a; }
 
-  inline Offset one_offset() { return Offset(1); }
-  inline Offset unary_sub(const Offset &offset) { return Offset(-offset.value); }
+  inline Offset one_offset() { return Offset(); }
+  inline Offset unary_sub(const Offset &offset) { auto o = offset; o.value = -offset.value; return o; }
 };
 
 template <typename _Array, typename _Axis, typename _Float, typename _Index,
@@ -181,7 +181,7 @@ struct forall_ops {
 
   _snippet_ix snippet_ix;
 
-  inline Nat nbCores() { return Nat(NB_CORES); }
+  inline Nat nbCores() { auto n = Nat(); n.value = NB_CORES; return n; }
 
   inline Array forall_ix_snippet(const Array &u, const Array &v,
       const Array &u0, const Array &u1, const Array &u2, const Float &c0,
@@ -236,8 +236,18 @@ struct forall_ops {
 
     return result;
   }
-};
 
+  inline Array forall_ix_snippet_cuda(const Array &u, const Array &v,
+    const Array &u0, const Array &u1, const Array &u2, const Float &c0,
+    const Float &c1, const Float &c2, const Float &c3, const Float &c4) {
+
+      Array result;
+      for(size_t i = 0; i < SIDE * SIDE * SIDE; ++i) {
+          result[i] = snippet_ix(u, v, u0, u1, u2, c0, c1, c2, c3, c4, i); 
+      }
+      return result;
+  }
+};
 inline void dumpsine(array_ops::Array &result) {
   double step = 0.01;
   double PI = 3.14159265358979323846;

@@ -22,9 +22,10 @@ def run_compiler(rewrite_confs):
     print(process.stdout.decode('utf-8'))
 
 if __name__ == '__main__':
-    rew_configs = [ ##("DNFIntroducePsi", 100)
+    rew_configs = [ ("CudaRules", 1)
+                  ##,("DNFIntroducePsi", 100)
                   ##, ("DNFCleanupPsiIntroduction", 100)
-                    ("DNFRules", 100)
+                  , ("DNFRules", 100)
                   ## ("OFRavel", 1)
                   ##, ("ShapeIsUnique", 100) # WRONG SHAPE IS NOT UNIQUE
                   ## ("ONFToArrayRules", 100)
