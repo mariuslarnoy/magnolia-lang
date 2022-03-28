@@ -14,6 +14,7 @@
 #define NTILES 4
 #define NB_CORES 2
 
+
 struct array_ops {
   typedef float Float;
   struct Offset { int value = 1; };
@@ -237,11 +238,71 @@ struct forall_ops {
 
     return result;
   }*/
+  template <class __snippet_ix>
+  struct _forall_kernel {
 
-  __host__ __device__ inline Array forall_ix_snippet_cuda(const Array &u, const Array &v,
+    __snippet_ix snippet_ix;
+    __host__ __device__ void operator()(Array *u, Array *v, Array *u0, Array *u1, Array *u2, float c0, float c1, float c2, float c3, float c4) {
+        int i = blockIdx.x*blockDim.x+threadIdx.x;
+        Array result;
+        if (i < SIDE * SIDE * SIDE) {
+            // call PDEProgram::snippet_ix with the right arguments
+            result[i]=snippet_ix(*u, *v, *u0, *u1, *u2, c0, c1, c2, c3, c4,i);
+        }
+      }
+  };
+
+  inline Array forall_ix_snippet_cuda(const Array &u, const Array &v,
     const Array &u0, const Array &u1, const Array &u2, const Float &c0,
-    const Float &c1, const Float &c2, const Float &c3, const Float &c4);
+    const Float &c1, const Float &c2, const Float &c3, const Float &c4) {
+
+      _forall_kernel<_snippet_ix> forall_kernel;
+
+      array_ops::Array *u_d,*v_d,*d0, *d1, *d2;
+
+      cudaMalloc(&u_d,SIDE*SIDE*SIDE*sizeof(array_ops::Array));
+      cudaMalloc(&v_d,SIDE*SIDE*SIDE*sizeof(array_ops::Array));
+      cudaMalloc(&d0,SIDE*SIDE*SIDE*sizeof(array_ops::Array));
+      cudaMalloc(&d1,SIDE*SIDE*SIDE*sizeof(array_ops::Array));
+      cudaMalloc(&d2,SIDE*SIDE*SIDE*sizeof(array_ops::Array));
+      
+      cudaMemcpy(&u_d,&u,SIDE*SIDE*SIDE*sizeof(array_ops::Array),cudaMemcpyHostToDevice);
+      cudaMemcpy(&v_d,&v,SIDE*SIDE*SIDE*sizeof(array_ops::Array),cudaMemcpyHostToDevice);
+      cudaMemcpy(&d0,&u0,SIDE*SIDE*SIDE*sizeof(array_ops::Array),cudaMemcpyHostToDevice);
+      cudaMemcpy(&d1,&u1,SIDE*SIDE*SIDE*sizeof(array_ops::Array),cudaMemcpyHostToDevice);
+      cudaMemcpy(&d2,&u2,SIDE*SIDE*SIDE*sizeof(array_ops::Array),cudaMemcpyHostToDevice);
+
+      forall_ix_snippet_cuda_x<<<1,1>>>(u_d, v_d, d0, d1, d2, c0, c1, c2, c3, c4, forall_kernel);
+
+      cudaDeviceSynchronize();
+
+      return u;
+    }
+
 };
+template<class _kernel>
+__global__ inline void forall_ix_snippet_cuda_x(array_ops::Array *u, 
+  array_ops::Array *v, array_ops::Array *u0, array_ops::Array *u1, array_ops::Array *u2, const array_ops::Float &c0,
+  const array_ops::Float &c1, const array_ops::Float &c2, const array_ops::Float &c3, const array_ops::Float &c4, _kernel kernel)
+{
+
+  kernel(u,v,u0,u1,u2,c0,c1,c2,c3,c4);
+
+
+
+//kernel(u_d, v_d, d0, d1, d2, c0, c1, c2, c3, c4);
+
+
+
+//cudaMemcpy(&u,&u_d,SIDE*SIDE*SIDE*sizeof(Array),cudaMemcpyDeviceToHost);
+//cudaMemcpy(&v,&v_d,SIDE*sizeof(Array),cudaMemcpyDeviceToHost);
+//cudaMemcpy(&u0,&d0,SIDE*sizeof(Array),cudaMemcpyDeviceToHost);
+//cudaMemcpy(&u1,&d1,SIDE*sizeof(Array),cudaMemcpyDeviceToHost);
+//cudaMemcpy(&u2,&d2,SIDE*sizeof(Array),cudaMemcpyDeviceToHost);
+
+}
+
+
 
 inline void dumpsine(array_ops::Array &result) {
   double step = 0.01;

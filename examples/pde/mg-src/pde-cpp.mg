@@ -305,7 +305,7 @@ concept CudaRules = {
                                c0: Float, c1: Float, c2: Float,
                                c3: Float, c4: Float): Array;
 
-    axiom cudaRule(u: Array, v: Array, u0: Array, u1: Array, u2: Array,
+    axiom cudaRule(res: Array, u: Array, v: Array, u0: Array, u1: Array, u2: Array,
                    c0: Float, c1: Float, c2: Float, c3: Float, c4: Float, result: Array) {
         assert forall_ix_snippet(u, v, u0, u1, u2, c0, c1, c2, c3, c4) ==
                forall_ix_snippet_cuda(u, v, u0, u1, u2, c0, c1, c2, c3, c4);
