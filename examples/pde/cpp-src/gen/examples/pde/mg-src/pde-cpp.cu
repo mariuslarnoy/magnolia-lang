@@ -1,4 +1,4 @@
-#include "gen/examples/pde/mg-src/pde-cpp.hpp"
+#include "gen/examples/pde/mg-src/pde-cpp.cuh"
 
 
 namespace examples {
@@ -14,10 +14,6 @@ namespace pde_cpp {
     PDEProgram::_one PDEProgram::one;
 
     array_ops PDEProgram::__array_ops;
-
-
-
-    PDEProgram::_nbCores PDEProgram::nbCores;
 
 
 
@@ -54,14 +50,6 @@ namespace pde_cpp {
 
 
     PDEProgram::_forall_ix_snippet_cuda PDEProgram::forall_ix_snippet_cuda;
-
-
-
-    PDEProgram::_forall_ix_snippet_threaded PDEProgram::forall_ix_snippet_threaded;
-
-
-
-    PDEProgram::_forall_ix_snippet_tiled PDEProgram::forall_ix_snippet_tiled;
 
 
 

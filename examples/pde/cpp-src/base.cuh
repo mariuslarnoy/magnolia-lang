@@ -44,16 +44,16 @@ struct array_ops {
       return *this;
     }
 
-    Array &operator=(Array &&other) {
+    __host__ __device__ Array &operator=(Array &&other) {
         this->content = std::move(other.content);
         return *this;
     }
 
-    inline Float operator[](const Index &ix) const {
+    __host__ __device__ inline Float operator[](const Index &ix) const {
       return this->content[ix];
     }
 
-    inline Float &operator[](const Index &ix) {
+    __host__ __device__ inline Float &operator[](const Index &ix) {
       return this->content[ix];
     }
   };
@@ -62,7 +62,7 @@ struct array_ops {
 
   /* Float ops */
   inline Float unary_sub(const Float &f) { return -f; }
-  inline Float binary_add(const Float &lhs, const Float &rhs) {
+  __host__ __device__ inline Float binary_add(const Float &lhs, const Float &rhs) {
     return lhs + rhs;
   }
   inline Float binary_sub(const Float &lhs, const Float &rhs) {
@@ -74,7 +74,7 @@ struct array_ops {
   inline Float div(const Float &num, const Float &den) {
     return num / den;
   }
-  inline Float one_float() { return 1; }
+  __host__ __device__ inline Float one_float() { return 1; }
   inline Float two_float() { return 2; }
   inline Float three_float() { return 3; }
 
@@ -180,8 +180,8 @@ struct forall_ops {
   typedef _Offset Offset;
 
   _snippet_ix snippet_ix;
-
-  inline Nat nbCores() { auto n = Nat(); n.value = NB_CORES; return n; }
+ 
+  //inline Nat nbCores() { auto n = Nat(); n.value = NB_CORES; return n; }
 
   inline Array forall_ix_snippet(const Array &u, const Array &v,
       const Array &u0, const Array &u1, const Array &u2, const Float &c0,
@@ -197,7 +197,8 @@ struct forall_ops {
 
     return result;
   }
-
+  
+ /*
   inline Array forall_ix_snippet_threaded(const Array &u, const Array &v,
       const Array &u0, const Array &u1, const Array &u2, const Float &c0,
       const Float &c1, const Float &c2, const Float &c3, const Float &c4,
@@ -235,19 +236,13 @@ struct forall_ops {
     }
 
     return result;
-  }
+  }*/
 
-  inline Array forall_ix_snippet_cuda(const Array &u, const Array &v,
+  __host__ __device__ inline Array forall_ix_snippet_cuda(const Array &u, const Array &v,
     const Array &u0, const Array &u1, const Array &u2, const Float &c0,
-    const Float &c1, const Float &c2, const Float &c3, const Float &c4) {
-
-      Array result;
-      for(size_t i = 0; i < SIDE * SIDE * SIDE; ++i) {
-          result[i] = snippet_ix(u, v, u0, u1, u2, c0, c1, c2, c3, c4, i); 
-      }
-      return result;
-  }
+    const Float &c1, const Float &c2, const Float &c3, const Float &c4);
 };
+
 inline void dumpsine(array_ops::Array &result) {
   double step = 0.01;
   double PI = 3.14159265358979323846;

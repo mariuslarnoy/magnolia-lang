@@ -122,30 +122,30 @@ implementation ExtExtendMissingBypass = external C++ base.forall_ops {
                                 u0: Array, u1: Array, u2: Array,
                                 c0: Float, c1: Float, c2: Float,
                                 c3: Float, c4: Float, ix: Index): Float;
-
+    
     function forall_ix_snippet(u: Array, v: Array,
                                u0: Array, u1: Array, u2: Array,
                                c0: Float, c1: Float, c2: Float,
                                c3: Float, c4: Float): Array;
 
-    /* OF Lift Cores extension */
-    function forall_ix_snippet_threaded(u: Array, v: Array, u0: Array,
-                                        u1: Array, u2: Array, c0: Float,
-                                        c1: Float, c2: Float, c3: Float,
-                                        c4: Float, nbThreads: Nat): Array;
-    function nbCores(): Nat;
-
-    /* OF Tiled extension */
-    function forall_ix_snippet_tiled(u: Array, v: Array, u0: Array,
-                                     u1: Array, u2: Array, c0: Float,
-                                     c1: Float, c2: Float, c3: Float,
-                                     c4: Float): Array;
-
+    ///* OF Lift Cores extension */
+    //function forall_ix_snippet_threaded(u: Array, v: Array, u0: Array,
+    //                                    u1: Array, u2: Array, c0: Float,
+    //                                    c1: Float, c2: Float, c3: Float,
+    //                                    c4: Float, nbThreads: Nat): Array;
+    //function nbCores(): Nat;
+//
+    ///* OF Tiled extension */
+    //function forall_ix_snippet_tiled(u: Array, v: Array, u0: Array,
+    //                                 u1: Array, u2: Array, c0: Float,
+    //                                 c1: Float, c2: Float, c3: Float,
+    //                                 c4: Float): Array;
+    //
     /* Cuda extension */
     function forall_ix_snippet_cuda(u: Array, v: Array, u0: Array,
                                      u1: Array, u2: Array, c0: Float,
                                      c1: Float, c2: Float, c3: Float,
-                                     c4: Float): Array;                               
+                                     c4: Float) :Array;                               
 }
 
 implementation ExtArrayOps = external C++ base.array_ops {
@@ -245,7 +245,7 @@ concept DNFRules = {
 }
 
 /// End of DNF base, start of experiments
-
+/*
 concept OFLiftCores = {
     type Array;
     type Float;
@@ -291,7 +291,7 @@ concept OFTile = {
                forall_ix_snippet_tiled(u, v, u0, u1, u2, c0, c1, c2, c3, c4);
     }
 }
-
+*/
 concept CudaRules = {
     type Array;
     type Float;
@@ -306,7 +306,7 @@ concept CudaRules = {
                                c3: Float, c4: Float): Array;
 
     axiom cudaRule(u: Array, v: Array, u0: Array, u1: Array, u2: Array,
-                   c0: Float, c1: Float, c2: Float, c3: Float, c4: Float) {
+                   c0: Float, c1: Float, c2: Float, c3: Float, c4: Float, result: Array) {
         assert forall_ix_snippet(u, v, u0, u1, u2, c0, c1, c2, c3, c4) ==
                forall_ix_snippet_cuda(u, v, u0, u1, u2, c0, c1, c2, c3, c4);
     }

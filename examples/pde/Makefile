@@ -10,13 +10,13 @@ CC := nvcc
 
 # if clang++, can use
 # -mllvm -inline-threshold=1000000000
-CCFLAGS := -I$(CPP_SOURCE_DIR)
+CCFLAGS := -I$(CPP_SOURCE_DIR) --expt-relaxed-constexpr -rdc=true -O3
 #-g -mtune=native -march=native -O3 -std=c++17 -I$(CPP_SOURCE_DIR) -fopenmp
 MKDIR := @mkdir
 RM := @rm
 #$(CC) $(CCFLAGS) $(CPP_SOURCES) -o $(BIN_DIR)/$(TARGET)
 all: setup
-	#$(CC) $(CCFLAGS) $(CPP_SOURCES) -o $(BIN_DIR)/$(TARGET)
+	$(CC) $(CCFLAGS) $(CPP_SOURCES) -o $(BIN_DIR)/$(TARGET)
 	@echo $(TARGET)
 	@echo $(CPP_SOURCES)
 

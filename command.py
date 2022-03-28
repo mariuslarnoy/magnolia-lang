@@ -32,7 +32,7 @@ if __name__ == '__main__':
                   ## ("PsiCorrespondenceTheorem", 1)
                   ##, ("ShapeIsUnique", 100) # Could rewrite next rewrite rules
                   ##, ("OFCleanupIdentity", 100)
-                  , ("OFTile", 1)
+                  #, ("OFTile", 1)
                   #, ("OFLiftCores", 1)
                   ##, ("OFIntroducePaddingInArguments", 1)
                   #, ("OFIntroducePaddingRule", 1)
