@@ -10,7 +10,7 @@
 
 #include <omp.h>
 
-#define SIDE 512
+#define SIDE 30
 #define NTILES 4
 #define NB_CORES 2
 
@@ -242,12 +242,12 @@ struct forall_ops {
   struct _forall_kernel {
 
     __snippet_ix snippet_ix;
-    __host__ __device__ void operator()(Array *u, Array *v, Array *u0, Array *u1, Array *u2, float c0, float c1, float c2, float c3, float c4) {
+    __host__ __device__ void operator()(Array *res, Array *u, Array *v, Array *u0, Array *u1, Array *u2, float c0, float c1, float c2, float c3, float c4) {
+
         int i = blockIdx.x*blockDim.x+threadIdx.x;
-        Array result;
+        printf("hello");
         if (i < SIDE * SIDE * SIDE) {
-            // call PDEProgram::snippet_ix with the right arguments
-            result[i]=snippet_ix(*u, *v, *u0, *u1, *u2, c0, c1, c2, c3, c4,i);
+            printf("%f", snippet_ix(*u, *v, *u0, *u1, *u2, c0, c1, c2, c3, c4,i));
         }
       }
   };
@@ -255,38 +255,71 @@ struct forall_ops {
   inline Array forall_ix_snippet_cuda(const Array &u, const Array &v,
     const Array &u0, const Array &u1, const Array &u2, const Float &c0,
     const Float &c1, const Float &c2, const Float &c3, const Float &c4) {
-
+      printf("sdfsdf");
       _forall_kernel<_snippet_ix> forall_kernel;
 
       array_ops::Array *u_d,*v_d,*d0, *d1, *d2;
+      array_ops::Array *res_h, *res_d;
 
-      cudaMalloc(&u_d,SIDE*SIDE*SIDE*sizeof(array_ops::Array));
-      cudaMalloc(&v_d,SIDE*SIDE*SIDE*sizeof(array_ops::Array));
-      cudaMalloc(&d0,SIDE*SIDE*SIDE*sizeof(array_ops::Array));
-      cudaMalloc(&d1,SIDE*SIDE*SIDE*sizeof(array_ops::Array));
-      cudaMalloc(&d2,SIDE*SIDE*SIDE*sizeof(array_ops::Array));
       
-      cudaMemcpy(&u_d,&u,SIDE*SIDE*SIDE*sizeof(array_ops::Array),cudaMemcpyHostToDevice);
-      cudaMemcpy(&v_d,&v,SIDE*SIDE*SIDE*sizeof(array_ops::Array),cudaMemcpyHostToDevice);
-      cudaMemcpy(&d0,&u0,SIDE*SIDE*SIDE*sizeof(array_ops::Array),cudaMemcpyHostToDevice);
-      cudaMemcpy(&d1,&u1,SIDE*SIDE*SIDE*sizeof(array_ops::Array),cudaMemcpyHostToDevice);
-      cudaMemcpy(&d2,&u2,SIDE*SIDE*SIDE*sizeof(array_ops::Array),cudaMemcpyHostToDevice);
 
-      forall_ix_snippet_cuda_x<<<1,1>>>(u_d, v_d, d0, d1, d2, c0, c1, c2, c3, c4, forall_kernel);
+      cudaMalloc(&res_d,sizeof(array_ops::Array));
+      cudaMalloc(&u_d,sizeof(array_ops::Array));
+      cudaMalloc(&v_d,sizeof(array_ops::Array));
+      cudaMalloc(&d0,sizeof(array_ops::Array));
+      cudaMalloc(&d1,sizeof(array_ops::Array));
+      cudaMalloc(&d2,sizeof(array_ops::Array));
+      printf("hello9");
+      cudaMemcpy(u_d,&u,sizeof(array_ops::Array),cudaMemcpyHostToDevice);
+      Float *u_ptr;
+      cudaMalloc(&u_ptr,sizeof(array_ops::Float)*SIDE*SIDE*SIDE);
+      cudaMemcpy(u_ptr,u.content.get(),sizeof(array_ops::Float)*SIDE*SIDE*SIDE,cudaMemcpyHostToDevice);
+      u_d->content = std::unique_ptr<Float[]>(u_ptr);
+      printf("hello1");
+      cudaMemcpy(v_d,&v,sizeof(array_ops::Array),cudaMemcpyHostToDevice);
+      Float *v_ptr;
+      cudaMalloc(&v_ptr,sizeof(array_ops::Float)*SIDE*SIDE*SIDE);
+      cudaMemcpy(v_ptr,v.content.get(),sizeof(array_ops::Float)*SIDE*SIDE*SIDE,cudaMemcpyHostToDevice);
+      v_d->content = std::unique_ptr<Float[]>(v_ptr);
+      printf("hello2");
+      cudaMemcpy(d0,&u0,sizeof(array_ops::Array),cudaMemcpyHostToDevice);
+      Float *d0_ptr;
+      cudaMalloc(&d0_ptr,sizeof(array_ops::Float)*SIDE*SIDE*SIDE);
+      cudaMemcpy(d0_ptr,u0.content.get(),sizeof(array_ops::Float)*SIDE*SIDE*SIDE,cudaMemcpyHostToDevice);
+      d0 ->content = std::unique_ptr<Float[]>(d0_ptr);
+      printf("hello3");
+      cudaMemcpy(d1,&u1,sizeof(array_ops::Array),cudaMemcpyHostToDevice);
+      Float *d1_ptr;
+      cudaMalloc(&d1_ptr,sizeof(array_ops::Float)*SIDE*SIDE*SIDE);
+      cudaMemcpy(d1_ptr,u1.content.get(),sizeof(array_ops::Float)*SIDE*SIDE*SIDE,cudaMemcpyHostToDevice);
+      d1 ->content = std::unique_ptr<Float[]>(d1_ptr);
+      printf("hello4");
+      cudaMemcpy(d2,&u2,sizeof(array_ops::Array),cudaMemcpyHostToDevice);
+      Float *d2_ptr;
+      cudaMalloc(&d2_ptr,sizeof(array_ops::Float)*SIDE*SIDE*SIDE);
+      cudaMemcpy(d2_ptr,u2.content.get(),sizeof(array_ops::Float)*SIDE*SIDE*SIDE,cudaMemcpyHostToDevice);
+      d2 ->content = std::unique_ptr<Float[]>(d2_ptr);
+      
+      Float *res_d_ptr;
+      cudaMalloc(&res_d_ptr,sizeof(array_ops::Float)*SIDE*SIDE*SIDE);
+      res_d ->content = std::unique_ptr<Float[]>(res_d_ptr);
+
+      forall_ix_snippet_cuda_x<<<1,1>>>(res_d,u_d, v_d, d0, d1, d2, c0, c1, c2, c3, c4, forall_kernel);
 
       cudaDeviceSynchronize();
+      cudaMemcpy(&res_h,&res_d,SIDE*SIDE*SIDE*sizeof(array_ops::Array),cudaMemcpyDeviceToHost);
 
-      return u;
+      return *res_h;
     }
 
 };
 template<class _kernel>
-__global__ inline void forall_ix_snippet_cuda_x(array_ops::Array *u, 
+__global__ inline void forall_ix_snippet_cuda_x(array_ops::Array *res,array_ops::Array *u, 
   array_ops::Array *v, array_ops::Array *u0, array_ops::Array *u1, array_ops::Array *u2, const array_ops::Float &c0,
   const array_ops::Float &c1, const array_ops::Float &c2, const array_ops::Float &c3, const array_ops::Float &c4, _kernel kernel)
 {
 
-  kernel(u,v,u0,u1,u2,c0,c1,c2,c3,c4);
+  kernel(res,u,v,u0,u1,u2,c0,c1,c2,c3,c4);
 
 
 
