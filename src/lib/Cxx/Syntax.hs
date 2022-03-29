@@ -607,7 +607,7 @@ prettyCxxFnDef cxxOutMode
   (if isTemplated then pTemplateParams <> line else "") <>
   (if cxxModuleMemberType == CxxStaticMember && cxxOutMode == CxxHeader
    then "static " else "") <>
-  (if isInline then "inline " else "") <> p retTy <+> p name <> "(" <>
+  (if isInline then "inline __host__ __device__" else "__host__ __device__") <> p retTy <+> p name <> "(" <>
   hsep (punctuate comma (map p params)) <> ")" <>
   case cxxOutMode of
     CxxHeader -> if isTemplated || isInline

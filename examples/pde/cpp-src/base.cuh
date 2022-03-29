@@ -63,7 +63,7 @@ struct array_ops {
 
   /* Float ops */
   inline Float unary_sub(const Float &f) { return -f; }
-  __host__ __device__ inline Float binary_add(const Float &lhs, const Float &rhs) {
+  inline Float binary_add(const Float &lhs, const Float &rhs) {
     return lhs + rhs;
   }
   inline Float binary_sub(const Float &lhs, const Float &rhs) {
@@ -181,7 +181,7 @@ struct forall_ops {
   typedef _Offset Offset;
 
   _snippet_ix snippet_ix;
- 
+
   //inline Nat nbCores() { auto n = Nat(); n.value = NB_CORES; return n; }
 
   inline Array forall_ix_snippet(const Array &u, const Array &v,
@@ -198,7 +198,7 @@ struct forall_ops {
 
     return result;
   }
-  
+
  /*
   inline Array forall_ix_snippet_threaded(const Array &u, const Array &v,
       const Array &u0, const Array &u1, const Array &u2, const Float &c0,
@@ -261,8 +261,6 @@ struct forall_ops {
       array_ops::Array *u_d,*v_d,*d0, *d1, *d2;
       array_ops::Array *res_h, *res_d;
 
-      
-
       cudaMalloc(&res_d,sizeof(array_ops::Array));
       cudaMalloc(&u_d,sizeof(array_ops::Array));
       cudaMalloc(&v_d,sizeof(array_ops::Array));
@@ -299,7 +297,7 @@ struct forall_ops {
       cudaMalloc(&d2_ptr,sizeof(array_ops::Float)*SIDE*SIDE*SIDE);
       cudaMemcpy(d2_ptr,u2.content.get(),sizeof(array_ops::Float)*SIDE*SIDE*SIDE,cudaMemcpyHostToDevice);
       d2 ->content = std::unique_ptr<Float[]>(d2_ptr);
-      
+
       Float *res_d_ptr;
       cudaMalloc(&res_d_ptr,sizeof(array_ops::Float)*SIDE*SIDE*SIDE);
       res_d ->content = std::unique_ptr<Float[]>(res_d_ptr);
@@ -311,10 +309,10 @@ struct forall_ops {
 
       return *res_h;
     }
-
 };
+
 template<class _kernel>
-__global__ inline void forall_ix_snippet_cuda_x(array_ops::Array *res,array_ops::Array *u, 
+__global__ inline void forall_ix_snippet_cuda_x(array_ops::Array *res,array_ops::Array *u,
   array_ops::Array *v, array_ops::Array *u0, array_ops::Array *u1, array_ops::Array *u2, const array_ops::Float &c0,
   const array_ops::Float &c1, const array_ops::Float &c2, const array_ops::Float &c3, const array_ops::Float &c4, _kernel kernel)
 {
