@@ -1,4 +1,4 @@
-#include "gen/examples/pde/mg-src/pde-cpp.hpp"
+#include "gen/examples/pde/mg-src/pde-cpp.cuh"
 
 
 namespace examples {
@@ -61,10 +61,6 @@ namespace pde_cpp {
 
 
 
-    PDEProgram::_forall_ix_snippet_specialized_psi_padded PDEProgram::forall_ix_snippet_specialized_psi_padded;
-
-
-
     PDEProgram::_forall_ix_snippet_threaded PDEProgram::forall_ix_snippet_threaded;
 
 
@@ -74,6 +70,10 @@ namespace pde_cpp {
 
 
     PDEProgram::_mul PDEProgram::mul;
+
+
+
+    PDEProgram::_psi PDEProgram::psi;
 
 
 
@@ -121,19 +121,9 @@ namespace pde_cpp {
 
     PDEProgram::_mod PDEProgram::mod;
 
-
-
-    PDEProgram::_psi PDEProgram::psi;
-
     forall_ops<PDEProgram::Array, PDEProgram::Axis, PDEProgram::Float, PDEProgram::Index, PDEProgram::Nat, PDEProgram::Offset, PDEProgram::_snippet_ix> PDEProgram::__forall_ops;
 
     PDEProgram::_snippet_ix PDEProgram::snippet_ix;
-
-
-
-    specialize_psi_ops<PDEProgram::Array, PDEProgram::Float, PDEProgram::Index, PDEProgram::ScalarIndex, PDEProgram::_snippet_ix_specialized> PDEProgram::__specialize_psi_ops;
-
-    PDEProgram::_snippet_ix_specialized PDEProgram::snippet_ix_specialized;
 
 
 
