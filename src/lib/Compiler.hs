@@ -189,8 +189,8 @@ runCompileWith filePath config =
       -- overwriting leave files, so this operation will fail if a file exists
       -- where we want to create a directory.
       createDirectoryIfMissing True (takeDirectory pathToTargetNoExt)
-      let pathToHeaderFile = pathToTargetNoExt <> ".hpp"
-          pathToImplementationFile = pathToTargetNoExt <> ".cpp"
+      let pathToHeaderFile = pathToTargetNoExt <> ".cuh"
+          pathToImplementationFile = pathToTargetNoExt <> ".cu"
           baseIncludePath =
             fromMaybe baseOutPath (_configImportBaseDirectory config)
           headerFileContent = T.unpack $

@@ -2,8 +2,8 @@
 
 #include <omp.h>
 
-#include "gen/examples/pde/mg-src/pde-cpp.hpp"
-#include "base.hpp"
+#include "gen/examples/pde/mg-src/pde-cpp.cuh"
+#include "base.cuh"
 
 //typedef array_ops::Shape Shape;
 typedef array_ops::Array Array;

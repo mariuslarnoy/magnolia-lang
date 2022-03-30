@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base.hpp"
+#include "base.cuh"
 #include <cassert>
 
 

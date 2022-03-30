@@ -1,4 +1,4 @@
-#include "gen/examples/pde/mg-src/pde-cpp.hpp"
+#include "gen/examples/pde/mg-src/pde-cpp.cuh"
 
 
 namespace examples {
