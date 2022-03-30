@@ -233,14 +233,14 @@ data CxxHeaderLoc = RelativeMgDir | RelativeCxxDir | SystemDir
 -- ".hpp" suffix.
 mkCxxRelativeMgIncludeFromName :: Name -> CxxInclude
 mkCxxRelativeMgIncludeFromName =
-  CxxInclude RelativeMgDir . (<> ".hpp") .
+  CxxInclude RelativeMgDir . (<> ".cuh") .
     map (\c -> if c == '.' then '/' else c) . _name
 
 -- | Exposed constructor for C++ relative includes of external C++ files.
 -- Includes created through this constructor are given a ".hpp" suffix.
 mkCxxRelativeCxxIncludeFromPath :: FilePath -> CxxInclude
 mkCxxRelativeCxxIncludeFromPath =
-  CxxInclude RelativeCxxDir . (<> ".hpp") .
+  CxxInclude RelativeCxxDir . (<> ".cuh") .
     map (\c -> if c == '.' then '/' else c)
 
 -- | Exposed constructor for C++ system includes. No suffix is appended to the
@@ -609,7 +609,7 @@ prettyCxxFnDef cxxOutMode
   (if isTemplated then pTemplateParams <> line else "") <>
   (if cxxModuleMemberType == CxxStaticMember && cxxOutMode == CxxHeader
    then "static " else "") <>
-  (if isInline then "inline " else "") <> p retTy <+> p name <> "(" <>
+  (if isInline then "inline __host__ __device__ " else "__host__ __device__ ") <> p retTy <+> p name <> "(" <>
   hsep (punctuate comma (map p params)) <> ")" <>
   case cxxOutMode of
     CxxHeader -> if isTemplated || isInline
