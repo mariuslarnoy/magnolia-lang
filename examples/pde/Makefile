@@ -7,11 +7,11 @@ CPP_SOURCE_DIR := cpp-src
 CPP_SOURCES := $(shell find $(CPP_SOURCE_DIR) -name "*.cpp")
 DEFINES := -DPAD0=0 -DPAD1=0 -DPAD2=0
 
-CC := g++
+CC := nvcc
 
 # if clang++, can use
 # -mllvm -inline-threshold=1000000000
-CCFLAGS := -g -mtune=native -march=native -O3 -std=c++20 -I$(CPP_SOURCE_DIR) -fopenmp
+CCFLAGS := -I$(CPP_SOURCE_DIR) -g --expt-relaxed-constexpr -rdc=true -O3 -g
 
 MKDIR := @mkdir
 RM := @rm
