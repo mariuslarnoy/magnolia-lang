@@ -25,10 +25,10 @@
 
 struct array_ops {
   typedef float Float;
-  struct Offset { int value; };
-  struct Axis { size_t value; };
+  struct Offset { int value; Offset(){value=0;} Offset(int v){value=v;}};
+  struct Axis { size_t value; Axis(){value=0;} Axis(size_t v){value=v;}};
   typedef size_t Index;
-  struct Nat { size_t value; };
+  struct Nat { size_t value; Nat(){value=0;} Nat(size_t v){value=v;}};
 
   struct Array {
     std::unique_ptr<Float[]> content;
@@ -70,7 +70,7 @@ struct array_ops {
     void replenish_padding() {
       Float *raw_content = this->content.get();
 
-      double begin = omp_get_wtime();
+//      double begin = omp_get_wtime();
       // Axis 2
       if (PAD2 > 0) {
         for (size_t i = 0; i < S0; ++i) {
@@ -89,7 +89,7 @@ struct array_ops {
             }
         }
       }
-      double end = omp_get_wtime();
+  //    double end = omp_get_wtime();
 
       //std::cout << "overhead: " << end - begin << " [s]" << std::endl;
 
@@ -382,7 +382,7 @@ struct forall_ops {
 
   /* OF specialize psi extension */
 
-  struct ScalarIndex { size_t value; };
+  struct ScalarIndex { size_t value; ScalarIndex(size_t v){value=v;}};
 
   inline Index make_ix(const ScalarIndex &i, const ScalarIndex &j,
                        const ScalarIndex &k) {
@@ -391,7 +391,7 @@ struct forall_ops {
 
   /* OF Reduce MakeIx Rotate extension */
 
-  struct AxisLength { size_t value; };
+  struct AxisLength { size_t value; AxisLength(size_t v){value=v;}};
 
   inline ScalarIndex binary_add(const ScalarIndex &six, const Offset &offset) {
     return ScalarIndex(six.value + offset.value);

@@ -2,8 +2,8 @@
 
 #include <omp.h>
 
-#include "gen/examples/pde/mg-src/pde-cpp.hpp"
-#include "base.hpp"
+#include "gen/examples/pde/mg-src/pde-cpp.cuh"
+#include "base.cuh"
 
 //typedef array_ops::Shape Shape;
 typedef array_ops::Array Array;
@@ -21,7 +21,7 @@ int main() {
     dumpsine(u1);
     dumpsine(u2);
 
-    double begin = omp_get_wtime();
+    //double begin = omp_get_wtime();
 
     for (size_t i = 0; i < steps; ++i) {
         PDEProgram::step(u0, u1, u2, s_nu, s_dx, s_dt);
@@ -30,15 +30,15 @@ int main() {
                   << u2[PAD0 * PADDED_S1 * PADDED_S2 + PAD1 * PADDED_S2 + PAD2] << std::endl;
     }
 
-    double end = omp_get_wtime();
+    //double end = omp_get_wtime();
 
-    std::cout << end - begin << "[s] elapsed with sizes ("
-              << S0 << ", "
-              << S1 << ", "
-              << S2 << ") with padding ("
-              << PAD0 << ", "
-              << PAD1 << ", "
-              << PAD2 << ") on "
-              << NB_CORES << " threads for "
-              << steps << " steps" << std::endl;
+    //std::cout << end - begin << "[s] elapsed with sizes ("
+    //          << S0 << ", "
+      //        << S1 << ", "
+        //      << S2 << ") with padding ("
+          //    << PAD0 << ", "
+            //  << PAD1 << ", "
+             // << PAD2 << ") on "
+             // << NB_CORES << " threads for "
+             // << steps << " steps" << std::endl;
 }
