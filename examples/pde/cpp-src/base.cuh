@@ -23,24 +23,24 @@ struct array_ops {
   struct Nat { size_t value = 1; };
 
   struct Array {
-    std::unique_ptr<Float[]> content;
-    Array() {
-      this->content = std::unique_ptr<Float[]>(new Float[SIDE * SIDE * SIDE]);
+    Float* content;
+   __host__ __device__ Array() {
+      this->content = new Float[SIDE*SIDE*SIDE];
     }
 
-    Array(const Array &other) {
-      this->content = std::unique_ptr<Float[]>(new Float[SIDE * SIDE * SIDE]);
-      memcpy(this->content.get(), other.content.get(),
+    __host__ __device__ Array(const Array &other) {
+      this->content = new Float[SIDE * SIDE * SIDE];
+      memcpy(this->content, other.content,
              SIDE * SIDE * SIDE * sizeof(Float));
     }
 
-    Array(Array &&other) {
+    __host__ __device__ Array(Array &&other) {
         this->content = std::move(other.content);
     }
 
-    Array &operator=(const Array &other) {
-      this->content = std::unique_ptr<Float[]>(new Float[SIDE * SIDE * SIDE]);
-      memcpy(this->content.get(), other.content.get(),
+    __host__ __device__ Array &operator=(const Array &other) {
+      this->content = new Float[SIDE * SIDE * SIDE];
+      memcpy(this->content, other.content,
              SIDE * SIDE * SIDE * sizeof(Float));
       return *this;
     }
@@ -59,49 +59,49 @@ struct array_ops {
     }
   };
 
-  inline Float psi(const Index &ix, const Array &array) { return array[ix]; }
+  __host__ __device__ inline Float psi(const Index &ix, const Array &array) { return array[ix]; }
 
   /* Float ops */
-  inline Float unary_sub(const Float &f) { return -f; }
-  inline Float binary_add(const Float &lhs, const Float &rhs) {
+  __host__ __device__ inline Float unary_sub(const Float &f) { return -f; }
+  __host__ __device__ inline Float binary_add(const Float &lhs, const Float &rhs) {
     return lhs + rhs;
   }
-  inline Float binary_sub(const Float &lhs, const Float &rhs) {
+  __host__ __device__ inline Float binary_sub(const Float &lhs, const Float &rhs) {
     return lhs - rhs;
   }
-  inline Float mul(const Float &lhs, const Float &rhs) {
+  __host__ __device__ inline Float mul(const Float &lhs, const Float &rhs) {
     return lhs * rhs;
   }
-  inline Float div(const Float &num, const Float &den) {
+  __host__ __device__ inline Float div(const Float &num, const Float &den) {
     return num / den;
   }
   __host__ __device__ inline Float one_float() { return 1; }
-  inline Float two_float() { return 2; }
-  inline Float three_float() { return 3; }
+  __host__ __device__ inline Float two_float() { return 2; }
+  __host__ __device__ inline Float three_float() { return 3; }
 
   /* Scalar-Array ops */
-  inline Array binary_add(const Float &lhs, const Array &rhs) {
+  __host__ __device__ inline Array binary_add(const Float &lhs, const Array &rhs) {
     Array out;
     for (size_t i = 0; i < SIDE * SIDE * SIDE; ++i) {
       out[i] = lhs + rhs[i];
     }
     return out;
   }
-  inline Array binary_sub(const Float &lhs, const Array &rhs) {
+  __host__ __device__ inline Array binary_sub(const Float &lhs, const Array &rhs) {
     Array out;
     for (size_t i = 0; i < SIDE * SIDE * SIDE; ++i) {
       out[i] = lhs - rhs[i];
     }
     return out;
   }
-  inline Array mul(const Float &lhs, const Array &rhs) {
+  __host__ __device__ inline Array mul(const Float &lhs, const Array &rhs) {
     Array out;
     for (size_t i = 0; i < SIDE * SIDE * SIDE; ++i) {
       out[i] = lhs * rhs[i];
     }
     return out;
   }
-  inline Array div(const Float &lhs, const Array &rhs) {
+  __host__ __device__ inline Array div(const Float &lhs, const Array &rhs) {
     Array out;
     for (size_t i = 0; i < SIDE * SIDE * SIDE; ++i) {
       out[i] = lhs / rhs[i];
@@ -110,28 +110,28 @@ struct array_ops {
   }
 
   /* Array-Array ops */
-  inline Array binary_add(const Array &lhs, const Array &rhs) {
+  __host__ __device__ inline Array binary_add(const Array &lhs, const Array &rhs) {
     Array out;
     for (size_t i = 0; i < SIDE * SIDE * SIDE; ++i) {
       out[i] = lhs[i] + rhs[i];
     }
     return out;
   }
-  inline Array binary_sub(const Array &lhs, const Array &rhs) {
+  __host__ __device__ inline Array binary_sub(const Array &lhs, const Array &rhs) {
     Array out;
     for (size_t i = 0; i < SIDE * SIDE * SIDE; ++i) {
       out[i] = lhs[i] - rhs[i];
     }
     return out;
   }
-  inline Array mul(const Array &lhs, const Array &rhs) {
+  __host__ __device__ inline Array mul(const Array &lhs, const Array &rhs) {
     Array out;
     for (size_t i = 0; i < SIDE * SIDE * SIDE; ++i) {
       out[i] = lhs[i] * rhs[i];
     }
     return out;
   }
-  inline Array div(const Array &lhs, const Array &rhs) {
+  __host__ __device__ inline Array div(const Array &lhs, const Array &rhs) {
     Array out;
     for (size_t i = 0; i < SIDE * SIDE * SIDE; ++i) {
       out[i] = lhs[i] / rhs[i];
@@ -139,8 +139,8 @@ struct array_ops {
     return out;
   }
 
-  [[noreturn]] inline Array rotate(const Array &array, const Axis &axis, const Offset &o) {
-    throw "rotate not implemented";
+  [[noreturn]] __host__ __device__ inline Array rotate(const Array &array, const Axis &axis, const Offset &o) {
+    printf("rotate not implemented\n");
     //std::unreachable(); // Always optimize with DNF, do not rotate
   }
 
@@ -162,13 +162,34 @@ struct array_ops {
     return 0;
   }
 
-  inline Axis zero_axis() {auto a = Axis(); a.value = 0; return a; }
-  inline Axis one_axis() { auto a = Axis(); a.value = 1; return a; }
-  inline Axis two_axis() { auto a = Axis(); a.value = 2; return a; }
+  __host__ __device__ inline Axis zero_axis() {auto a = Axis(); a.value = 0; return a; }
+  __host__ __device__ inline Axis one_axis() { auto a = Axis(); a.value = 1; return a; }
+  __host__ __device__ inline Axis two_axis() { auto a = Axis(); a.value = 2; return a; }
 
-  inline Offset one_offset() { return Offset(); }
-  inline Offset unary_sub(const Offset &offset) { auto o = offset; o.value = -offset.value; return o; }
+  __host__ __device__ inline Offset one_offset() { return Offset(); }
+  __host__ __device__ inline Offset unary_sub(const Offset &offset) { auto o = offset; o.value = -offset.value; return o; }
 };
+template<class _kernel>
+__global__ inline void forall_ix_snippet_cuda_x(array_ops::Array *res,array_ops::Array *u,
+  array_ops::Array *v, array_ops::Array *u0, array_ops::Array *u1, array_ops::Array *u2, const array_ops::Float &c0,
+  const array_ops::Float &c1, const array_ops::Float &c2, const array_ops::Float &c3, const array_ops::Float &c4, _kernel kernel)
+{
+
+  kernel(res,u,v,u0,u1,u2,c0,c1,c2,c3,c4);
+
+
+
+//kernel(u_d, v_d, d0, d1, d2, c0, c1, c2, c3, c4);
+
+
+
+//cudaMemcpy(&u,&u_d,SIDE*SIDE*SIDE*sizeof(Array),cudaMemcpyDeviceToHost);
+//cudaMemcpy(&v,&v_d,SIDE*sizeof(Array),cudaMemcpyDeviceToHost);
+//cudaMemcpy(&u0,&d0,SIDE*sizeof(Array),cudaMemcpyDeviceToHost);
+//cudaMemcpy(&u1,&d1,SIDE*sizeof(Array),cudaMemcpyDeviceToHost);
+//cudaMemcpy(&u2,&d2,SIDE*sizeof(Array),cudaMemcpyDeviceToHost);
+
+}
 
 template <typename _Array, typename _Axis, typename _Float, typename _Index,
           typename _Nat, typename _Offset, class _snippet_ix>
@@ -268,41 +289,43 @@ struct forall_ops {
       cudaMalloc(&d1,sizeof(array_ops::Array));
       cudaMalloc(&d2,sizeof(array_ops::Array));
       printf("hello9");
+      
+      /*
       cudaMemcpy(u_d,&u,sizeof(array_ops::Array),cudaMemcpyHostToDevice);
       Float *u_ptr;
       cudaMalloc(&u_ptr,sizeof(array_ops::Float)*SIDE*SIDE*SIDE);
-      cudaMemcpy(u_ptr,u.content.get(),sizeof(array_ops::Float)*SIDE*SIDE*SIDE,cudaMemcpyHostToDevice);
-      u_d->content = std::unique_ptr<Float[]>(u_ptr);
+      cudaMemcpy(u_ptr,u.content,sizeof(array_ops::Float)*SIDE*SIDE*SIDE,cudaMemcpyHostToDevice);
+      //u_d->content = std::unique_ptr<Float[]>(u_ptr);
       printf("hello1");
       cudaMemcpy(v_d,&v,sizeof(array_ops::Array),cudaMemcpyHostToDevice);
       Float *v_ptr;
       cudaMalloc(&v_ptr,sizeof(array_ops::Float)*SIDE*SIDE*SIDE);
-      cudaMemcpy(v_ptr,v.content.get(),sizeof(array_ops::Float)*SIDE*SIDE*SIDE,cudaMemcpyHostToDevice);
-      v_d->content = std::unique_ptr<Float[]>(v_ptr);
+      cudaMemcpy(v_ptr,v.content,sizeof(array_ops::Float)*SIDE*SIDE*SIDE,cudaMemcpyHostToDevice);
+      //v_d->content = std::unique_ptr<Float[]>(v_ptr);
       printf("hello2");
       cudaMemcpy(d0,&u0,sizeof(array_ops::Array),cudaMemcpyHostToDevice);
       Float *d0_ptr;
       cudaMalloc(&d0_ptr,sizeof(array_ops::Float)*SIDE*SIDE*SIDE);
-      cudaMemcpy(d0_ptr,u0.content.get(),sizeof(array_ops::Float)*SIDE*SIDE*SIDE,cudaMemcpyHostToDevice);
-      d0 ->content = std::unique_ptr<Float[]>(d0_ptr);
+      cudaMemcpy(d0_ptr,u0.content,sizeof(array_ops::Float)*SIDE*SIDE*SIDE,cudaMemcpyHostToDevice);
+      //d0 ->content = std::unique_ptr<Float[]>(d0_ptr);
       printf("hello3");
       cudaMemcpy(d1,&u1,sizeof(array_ops::Array),cudaMemcpyHostToDevice);
       Float *d1_ptr;
       cudaMalloc(&d1_ptr,sizeof(array_ops::Float)*SIDE*SIDE*SIDE);
-      cudaMemcpy(d1_ptr,u1.content.get(),sizeof(array_ops::Float)*SIDE*SIDE*SIDE,cudaMemcpyHostToDevice);
-      d1 ->content = std::unique_ptr<Float[]>(d1_ptr);
+      cudaMemcpy(d1_ptr,u1.content,sizeof(array_ops::Float)*SIDE*SIDE*SIDE,cudaMemcpyHostToDevice);
+      //d1 ->content = std::unique_ptr<Float[]>(d1_ptr);
       printf("hello4");
       cudaMemcpy(d2,&u2,sizeof(array_ops::Array),cudaMemcpyHostToDevice);
       Float *d2_ptr;
       cudaMalloc(&d2_ptr,sizeof(array_ops::Float)*SIDE*SIDE*SIDE);
-      cudaMemcpy(d2_ptr,u2.content.get(),sizeof(array_ops::Float)*SIDE*SIDE*SIDE,cudaMemcpyHostToDevice);
-      d2 ->content = std::unique_ptr<Float[]>(d2_ptr);
+      cudaMemcpy(d2_ptr,u2.content,sizeof(array_ops::Float)*SIDE*SIDE*SIDE,cudaMemcpyHostToDevice);
+      //d2 ->content = std::unique_ptr<Float[]>(d2_ptr);
 
       Float *res_d_ptr;
       cudaMalloc(&res_d_ptr,sizeof(array_ops::Float)*SIDE*SIDE*SIDE);
-      res_d ->content = std::unique_ptr<Float[]>(res_d_ptr);
-
-      forall_ix_snippet_cuda_x<<<1,1>>>(res_d,u_d, v_d, d0, d1, d2, c0, c1, c2, c3, c4, forall_kernel);
+      //res_d ->content = std::unique_ptr<Float[]>(res_d_ptr);
+*/
+     // forall_ix_snippet_cuda_x<<<1,1>>>(res_d,u_d, v_d, d0, d1, d2, c0, c1, c2, c3, c4, forall_kernel);
 
       cudaDeviceSynchronize();
       cudaMemcpy(&res_h,&res_d,SIDE*SIDE*SIDE*sizeof(array_ops::Array),cudaMemcpyDeviceToHost);
@@ -310,30 +333,6 @@ struct forall_ops {
       return *res_h;
     }
 };
-
-template<class _kernel>
-__global__ inline void forall_ix_snippet_cuda_x(array_ops::Array *res,array_ops::Array *u,
-  array_ops::Array *v, array_ops::Array *u0, array_ops::Array *u1, array_ops::Array *u2, const array_ops::Float &c0,
-  const array_ops::Float &c1, const array_ops::Float &c2, const array_ops::Float &c3, const array_ops::Float &c4, _kernel kernel)
-{
-
-  kernel(res,u,v,u0,u1,u2,c0,c1,c2,c3,c4);
-
-
-
-//kernel(u_d, v_d, d0, d1, d2, c0, c1, c2, c3, c4);
-
-
-
-//cudaMemcpy(&u,&u_d,SIDE*SIDE*SIDE*sizeof(Array),cudaMemcpyDeviceToHost);
-//cudaMemcpy(&v,&v_d,SIDE*sizeof(Array),cudaMemcpyDeviceToHost);
-//cudaMemcpy(&u0,&d0,SIDE*sizeof(Array),cudaMemcpyDeviceToHost);
-//cudaMemcpy(&u1,&d1,SIDE*sizeof(Array),cudaMemcpyDeviceToHost);
-//cudaMemcpy(&u2,&d2,SIDE*sizeof(Array),cudaMemcpyDeviceToHost);
-
-}
-
-
 
 inline void dumpsine(array_ops::Array &result) {
   double step = 0.01;

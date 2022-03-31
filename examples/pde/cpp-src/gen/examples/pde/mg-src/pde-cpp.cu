@@ -29,7 +29,7 @@ namespace pde_cpp {
 
 
 
-    PDEProgram::_zero PDEProgram::zero;
+    PDEProgram::_zero  PDEProgram::zero;
 
 
 
