@@ -25,10 +25,10 @@
 
 struct array_ops {
   typedef float Float;
-  struct Offset { int value; };
-  struct Axis { size_t value; };
+  struct Offset { int value; Offset(){value=0;} Offset(int v){value=v;}};
+  struct Axis { size_t value; Axis(){value=0;} Axis(size_t v){value=v;}};
   typedef size_t Index;
-  struct Nat { size_t value; };
+  struct Nat { size_t value; Nat(){value=0;} Nat(size_t v){value=v;}};
 
   struct Array {
     std::unique_ptr<Float[]> content;
@@ -382,7 +382,7 @@ struct forall_ops {
 
   /* OF specialize psi extension */
 
-  struct ScalarIndex { size_t value; };
+  struct ScalarIndex { size_t value; ScalarIndex(){value=0;} ScalarIndex(size_t v){value=v;}};
 
   inline Index make_ix(const ScalarIndex &i, const ScalarIndex &j,
                        const ScalarIndex &k) {
@@ -391,7 +391,7 @@ struct forall_ops {
 
   /* OF Reduce MakeIx Rotate extension */
 
-  struct AxisLength { size_t value; };
+  struct AxisLength { size_t value; AxisLength(){value=0;} AxisLength(size_t v){value=v;}};
 
   inline ScalarIndex binary_add(const ScalarIndex &six, const Offset &offset) {
     return ScalarIndex(six.value + offset.value);
@@ -451,6 +451,36 @@ struct specialize_psi_ops {
     return result;
   }
 };
+
+template <typename _Array, typename _Float, typename _Index,
+	  typename _ScalarIndex, class _snippet_ix_cuda>
+struct cuda_ops {
+  typedef _Array Array;
+  typedef _Float Float;
+  typedef _Index Index;
+  typedef _ScalarIndex ScalarIndex;
+  
+  _snippet_ix_cuda snippet_ix_cuda;
+
+  inline Float psi(const ScalarIndex &i, ScalarIndex &j,
+		   const ScalarIndex &k, const Array &a) {
+    return a[i.value * PADDED_S1 * PADDED_S2 + j.value * PADDED_S2 + k.value];
+  }
+  
+  __host__ __device__ Array forall_ix_snippet_cuda(const Array &u, const Array &v,
+      const Array &u0, const Array &u1, const Array &u2, const Float &c0,
+      const Float &c1, const Float &c2, const Float &c3, const Float &c4) {
+    Array result;
+    std::cout << "in forall_ix_snippet_cuda" << std::endl;
+    size_t i,j,k = 0;    
+    auto ix = (blockIdx.x * blockDim.x) + threadIdx.x;
+    result[ix] = snippet_ix_specialized(u, v, u0, u1, u2, c0, c1, c2, c3, c4, ScalarIndex(i), ScalarIndex(j), ScalarIndex(k));
+    
+  }
+};
+
+
+
 
 inline void dumpsine(array_ops::Array &result) {
   double step = 0.01;

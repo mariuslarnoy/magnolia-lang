@@ -4,14 +4,14 @@ TARGET := $(shell basename `pwd`).bin
 
 BIN_DIR := bin
 CPP_SOURCE_DIR := cpp-src
-CPP_SOURCES := $(shell find $(CPP_SOURCE_DIR) -name "*.cpp")
+CPP_SOURCES := $(shell find $(CPP_SOURCE_DIR) -name "*.cu")
 DEFINES := -DPAD0=0 -DPAD1=0 -DPAD2=0
 
-CC := g++
+CC := clang++
 
 # if clang++, can use
 # -mllvm -inline-threshold=1000000000
-CCFLAGS := -g -mtune=native -march=native -O3 -std=c++20 -I$(CPP_SOURCE_DIR) -fopenmp
+CCFLAGS := -g -I$(CPP_SOURCE_DIR) --cuda-gpu-arch=sm_86 -fopenmp
 
 MKDIR := @mkdir
 RM := @rm
