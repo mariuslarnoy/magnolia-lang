@@ -31,14 +31,14 @@ struct array_ops {
   struct Nat { size_t value; Nat(){value=0;} Nat(size_t v){value=v;}};
 
   struct Array {
-    std::unique_ptr<Float[]> content;
+    Float* content;
     Array() {
-      this->content = std::unique_ptr<Float[]>(new Float[TOTAL_PADDED_SIZE]);
+      this->content = new Float[TOTAL_PADDED_SIZE];
     }
 
     Array(const Array &other) {
-      this->content = std::unique_ptr<Float[]>(new Float[TOTAL_PADDED_SIZE]);
-      memcpy(this->content.get(), other.content.get(),
+      this->content = new Float(TOTAL_PADDED_SIZE);
+      memcpy(this->content, other.content,
              TOTAL_PADDED_SIZE * sizeof(Float));
     }
 
@@ -47,8 +47,8 @@ struct array_ops {
     }
 
     Array &operator=(const Array &other) {
-      this->content = std::unique_ptr<Float[]>(new Float[TOTAL_PADDED_SIZE]);
-      memcpy(this->content.get(), other.content.get(),
+      this->content = new Float(TOTAL_PADDED_SIZE);
+      memcpy(this->content, other.content,
              TOTAL_PADDED_SIZE * sizeof(Float));
       return *this;
     }
@@ -68,7 +68,7 @@ struct array_ops {
 
     /* OF Pad extension */
     void replenish_padding() {
-      Float *raw_content = this->content.get();
+      Float *raw_content = this->content;
 
 //      double begin = omp_get_wtime();
       // Axis 2
@@ -208,7 +208,7 @@ struct array_ops {
     if constexpr(PAD0 >= 1) {
       return ix + (offset.value * PADDED_S1 * PADDED_S2);
     } else {
-
+      return ix;
     }
   }
 
@@ -458,19 +458,17 @@ inline void dumpsine(array_ops::Array &result) {
   double amplitude = 10.0;
   double phase = 0.0125;
   double t = 0.0;
-
   for (size_t i = PAD0; i < S0 + PAD0; ++i) {
     for (size_t j = PAD1; j < S1 + PAD1; ++j) {
       for (size_t k = PAD2; k < S2 + PAD2; ++k) {
         size_t ix = i * PADDED_S1 * PADDED_S2 +
                     j * PADDED_S2 +
                     k;
-        result[ix] = amplitude * sin(PI * t + phase);
+	result[ix] = amplitude * sin(PI * t + phase);
         t += step;
       }
     }
   }
-
   // std::cout << result[PAD0 * PADDED_S1 * PADDED_S2 + PAD1 * PADDED_S2 + PAD2]
   //           << " vs " << result[TOTAL_PADDED_SIZE - PAD0 * PADDED_S1 * PADDED_S2]
   //           << std::endl;

@@ -12,7 +12,7 @@ CC := clang++
 # if clang++, can use
 # -mllvm -inline-threshold=1000000000
 # 
-CCFLAGS := -g -I$(CPP_SOURCE_DIR) -mllvm -inline-threshold=1000000000 --cuda-gpu-arch=sm_86 -nocudalib --no-cuda-version-check
+CCFLAGS := -I$(CPP_SOURCE_DIR) --cuda-gpu-arch=sm_86 -Lcm/shared/apps/cuda11.6/lib64 -lcudart_static -ldl -lrt -pthread -std=c++17 
 
 MKDIR := @mkdir
 RM := @rm

@@ -17,6 +17,7 @@ static const double s_dx = 1.0;
 int main() {
     size_t steps = 50;
     Array u0, u1, u2;
+    
     dumpsine(u0);
     dumpsine(u1);
     dumpsine(u2);
