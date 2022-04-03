@@ -10,7 +10,7 @@ CC := nvcc
 
 # if clang++, can use
 # -mllvm -inline-threshold=1000000000
-CCFLAGS := -I$(CPP_SOURCE_DIR) -std=c++17 
+CCFLAGS := -I$(CPP_SOURCE_DIR) -std=c++17 -rdc=true -lcudadevrt
 #-g -mtune=native -march=native -O3 -std=c++17 -I$(CPP_SOURCE_DIR) -fopenmp
 MKDIR := @mkdir
 RM := @rm

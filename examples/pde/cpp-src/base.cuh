@@ -188,7 +188,7 @@ struct forall_ops {
 
   //inline Nat nbCores() { auto n = Nat(); n.value = NB_CORES; return n; }
 
-  inline Array forall_ix_snippet(const Array &u, const Array &v,
+  __host__ __device__ inline Array forall_ix_snippet(const Array &u, const Array &v,
       const Array &u0, const Array &u1, const Array &u2, const Float &c0,
       const Float &c1, const Float &c2, const Float &c3, const Float &c4) {
     Array result;
@@ -287,7 +287,7 @@ struct forall_ops {
       cudaMemcpy(d2,&u2,sizeof(array_ops::Array),cudaMemcpyHostToDevice);
       cudaMemcpy(res_d,&res_h,sizeof(array_ops::Array),cudaMemcpyHostToDevice);
 
-      forall_ix_snippet_cuda_x<<<1,1>>>(res_d,u_d, v_d, d0, d1, d2, c0, c1, c2, c3, c4, forall_kernel);
+      forall_ix_snippet_cuda_x<<<16,512>>>(res_d,u_d, v_d, d0, d1, d2, c0, c1, c2, c3, c4, forall_kernel);
 
       cudaDeviceSynchronize();
       //printf("cudaDeviceSynchronize succeeded\n");

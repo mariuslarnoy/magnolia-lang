@@ -157,6 +157,7 @@ public:
     struct _forall_ix_snippet_cuda {
         inline __host__ __device__ PDEProgram::Array operator()(const PDEProgram::Array& u, const PDEProgram::Array& v, const PDEProgram::Array& u0, const PDEProgram::Array& u1, const PDEProgram::Array& u2, const PDEProgram::Float& c0, const PDEProgram::Float& c1, const PDEProgram::Float& c2, const PDEProgram::Float& c3, const PDEProgram::Float& c4) {
             printf("forall_ix_snippet_cuda\n");
+            
             return __forall_ops.forall_ix_snippet_cuda(u, v, u0, u1, u2, c0, c1, c2, c3, c4);
         };
     };
@@ -195,7 +196,7 @@ public:
 
     static PDEProgram::_rotate rotate;
     struct _snippet {
-        inline __host__ __device__ void operator()(PDEProgram::Array& u, const PDEProgram::Array& v, const PDEProgram::Array& u0, const PDEProgram::Array& u1, const PDEProgram::Array& u2, const PDEProgram::Float& c0, const PDEProgram::Float& c1, const PDEProgram::Float& c2, const PDEProgram::Float& c3, const PDEProgram::Float& c4) {
+        inline __host__ void operator()(PDEProgram::Array& u, const PDEProgram::Array& v, const PDEProgram::Array& u0, const PDEProgram::Array& u1, const PDEProgram::Array& u2, const PDEProgram::Float& c0, const PDEProgram::Float& c1, const PDEProgram::Float& c2, const PDEProgram::Float& c3, const PDEProgram::Float& c4) {
             u = PDEProgram::forall_ix_snippet_cuda(u, v, u0, u1, u2, c0, c1, c2, c3, c4);
         };
     };
