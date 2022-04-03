@@ -12,10 +12,8 @@ namespace pde_cpp {
 
 
     PDEProgram::_one PDEProgram::one;
-
+    
     array_ops PDEProgram::__array_ops;
-
-
 
     PDEProgram::_three PDEProgram::three;
 
@@ -29,7 +27,7 @@ namespace pde_cpp {
 
 
 
-    PDEProgram::_zero  PDEProgram::zero;
+    PDEProgram::_zero PDEProgram::zero;
 
 
 

@@ -6,11 +6,11 @@ BIN_DIR := bin
 CPP_SOURCE_DIR := cpp-src
 CPP_SOURCES := $(shell find $(CPP_SOURCE_DIR) -name "*.cu")
 
-CC := clang++ 
+CC := nvcc 
 
 # if clang++, can use
 # -mllvm -inline-threshold=1000000000
-CCFLAGS := -I$(CPP_SOURCE_DIR) --cuda-gpu-arch=sm_86 -v -lcudart_static -ldl -lrt -pthread 
+CCFLAGS := -I$(CPP_SOURCE_DIR) -std=c++17 
 #-g -mtune=native -march=native -O3 -std=c++17 -I$(CPP_SOURCE_DIR) -fopenmp
 MKDIR := @mkdir
 RM := @rm

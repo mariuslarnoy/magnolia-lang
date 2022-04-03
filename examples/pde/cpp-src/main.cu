@@ -30,9 +30,9 @@ const Float &c1, const Float &c2, const Float &c3, const Float &c4) {
     
   }
 */
+
 int main() {
 
-    
     size_t side = SIDE; //256;
     size_t array_size = side*side*side;
     size_t steps = 20;
@@ -40,14 +40,33 @@ int main() {
     Array u0, u1, u2;
     
     dumpsine(u0);
+    std::cout << "dumpsine(u0) succeeded. u0[0]:" << std::endl;
+    std::cout << u0[0] << std::endl;
     dumpsine(u1);
+    std::cout << "dumpsine(u1) succeeded. u1[0]:" << std::endl;
+    std::cout << u1[0] << std::endl;
     dumpsine(u2);
+    std::cout << "dumpsine(u2) succeeded. u2[0]:" << std::endl;
+    std::cout << u2[0] << std::endl;
 
+
+    std::cout << "u0[0] = " << u0[0] << std::endl;
+    //std::cout << "before loop" << std::endl;
     for (auto i = 0; i < steps; ++i) {
+        //std::cout << "step nr: " << i << std::endl;
         PDEProgram::step(u0,u1,u2,s_nu,s_dx,s_dt);
+        
+        std::cout << u0[0] << " "
+                  << u1[0] << " "
+                  << u2[0] << std::endl;
+        
     }
+    //std::cout << "after loop" << std::endl;
 
-    return 0;
+    //for (auto i = 0; i < SIDE*SIDE*SIDE; ++i) {
+    //  std::cout << u0[i] << std::endl;
+    //}
+    //return 0;
     /*
     
     It's like: step { snippet { parallelize ix computations here } }
