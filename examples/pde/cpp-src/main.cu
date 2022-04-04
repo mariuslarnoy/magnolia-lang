@@ -5,17 +5,6 @@
 #include "base.cuh"
 
 //typedef array_ops::Shape Shape;
-typedef array_ops ArrayOps;
-
-typedef array_ops::Array Array;
-typedef array_ops::Index Index;
-typedef array_ops::Axis Axis;
-typedef array_ops::Float Float;
-typedef array_ops::Nat Nat;
-typedef array_ops::Offset Offset;
-
-typedef examples::pde::mg_src::pde_cpp::PDEProgram PDEProgram;
-typedef examples::pde::mg_src::pde_cpp::PDEProgram::_snippet_ix _snippet_ix;
 
 static const double s_dt = 0.00082212448155679772495;
 static const double s_nu = 1.0;
@@ -32,6 +21,17 @@ const Float &c1, const Float &c2, const Float &c3, const Float &c4) {
 */
 
 int main() {
+
+  typedef array_ops ArrayOps;
+
+  typedef array_ops::Array Array;
+  typedef array_ops::Index Index;
+  typedef array_ops::Axis Axis;
+  typedef array_ops::Float Float;
+  typedef array_ops::Nat Nat;
+  typedef array_ops::Offset Offset;
+  
+  examples::pde::mg_src::pde_cpp::PDEProgram pde = examples::pde::mg_src::pde_cpp::PDEProgram();
 
     size_t side = SIDE; //256;
     size_t array_size = side*side*side;
@@ -54,7 +54,7 @@ int main() {
     //std::cout << "before loop" << std::endl;
     for (auto i = 0; i < steps; ++i) {
         //std::cout << "step nr: " << i << std::endl;
-        PDEProgram::step(u0,u1,u2,s_nu,s_dx,s_dt);
+        pde.step(u0,u1,u2,s_nu,s_dx,s_dt);
         
         std::cout << u0[0] << " "
                   << u1[0] << " "
