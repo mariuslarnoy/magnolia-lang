@@ -13,6 +13,7 @@ namespace examples {
         struct PDEProgram {
 
           PDEProgram() {}
+
           struct _two {
 
             _two() {}
@@ -175,43 +176,6 @@ namespace examples {
             };
           };
 
-          struct _forall_ix_snippet {
-
-            _forall_ix_snippet() {}
-
-            inline __host__ __device__ PDEProgram::Array operator()(const PDEProgram::Array & u,
-              const PDEProgram::Array & v,
-                const PDEProgram::Array & u0,
-                  const PDEProgram::Array & u1,
-                    const PDEProgram::Array & u2,
-                      const PDEProgram::Float & c0,
-                        const PDEProgram::Float & c1,
-                          const PDEProgram::Float & c2,
-                            const PDEProgram::Float & c3,
-                              const PDEProgram::Float & c4) {
-              return __forall_ops.forall_ix_snippet(u, v, u0, u1, u2, c0, c1, c2, c3, c4);
-            };
-          };
-
-          struct _forall_ix_snippet_cuda {
-
-            _forall_ix_snippet_cuda() {}
-
-            inline __host__ PDEProgram::Array operator()(const PDEProgram::Array & u,
-              const PDEProgram::Array & v,
-                const PDEProgram::Array & u0,
-                  const PDEProgram::Array & u1,
-                    const PDEProgram::Array & u2,
-                      const PDEProgram::Float & c0,
-                        const PDEProgram::Float & c1,
-                          const PDEProgram::Float & c2,
-                            const PDEProgram::Float & c3,
-                              const PDEProgram::Float & c4) {
-              printf("forall_ix_snippet_cuda\n");
-
-              return __forall_ops.forall_ix_snippet_cuda(u, v, u0, u1, u2, c0, c1, c2, c3, c4);
-            };
-          };
 
           struct _mul {
 
@@ -266,30 +230,9 @@ namespace examples {
           _binary_add binary_add = _binary_add();
           _binary_sub binary_sub = _binary_sub();
           _div div = _div();
-          _forall_ix_snippet forall_ix_snippet = _forall_ix_snippet();
           _mul mul = _mul();
           _psi psi = _psi();
           _rotate rotate = _rotate();
-
-          struct _snippet {
-
-            _snippet() {}
-
-            _forall_ix_snippet_cuda forall_ix_snippet_cuda = _forall_ix_snippet_cuda();
-
-            inline __host__ void operator()(PDEProgram::Array & u,
-              const PDEProgram::Array & v,
-                const PDEProgram::Array & u0,
-                  const PDEProgram::Array & u1,
-                    const PDEProgram::Array & u2,
-                      const PDEProgram::Float & c0,
-                        const PDEProgram::Float & c1,
-                          const PDEProgram::Float & c2,
-                            const PDEProgram::Float & c3,
-                              const PDEProgram::Float & c4) {
-              u = forall_ix_snippet_cuda(u, v, u0, u1, u2, c0, c1, c2, c3, c4);
-            };
-          };
           
           struct _snippet_ix {
             
@@ -304,7 +247,6 @@ namespace examples {
             _binary_add binary_add = _binary_add();
             _binary_sub binary_sub = _binary_sub();
             _div div = _div();
-            _forall_ix_snippet forall_ix_snippet = _forall_ix_snippet();
             _mul mul = _mul();
             _psi psi = _psi();
             _rotate rotate = _rotate();
@@ -343,17 +285,75 @@ namespace examples {
               return result;
             };
           };
+          forall_ops < PDEProgram::Array, PDEProgram::Axis, PDEProgram::Float, PDEProgram::Index, PDEProgram::Nat, PDEProgram::Offset, PDEProgram::_snippet_ix > __forall_ops = forall_ops<PDEProgram::Array, PDEProgram::Axis, PDEProgram::Float, PDEProgram::Index, PDEProgram::Nat, PDEProgram::Offset, PDEProgram::_snippet_ix>();
 
-          private:
-            static forall_ops < PDEProgram::Array, PDEProgram::Axis, PDEProgram::Float, PDEProgram::Index, PDEProgram::Nat, PDEProgram::Offset, PDEProgram::_snippet_ix > __forall_ops;
-          public:
-            static PDEProgram::_snippet_ix snippet_ix;
+
+          struct _forall_ix_snippet_cuda {
+
+            _forall_ix_snippet_cuda() {}
+
+            forall_ops < PDEProgram::Array, PDEProgram::Axis, PDEProgram::Float, PDEProgram::Index, PDEProgram::Nat, PDEProgram::Offset, PDEProgram::_snippet_ix > __forall_ops = forall_ops<PDEProgram::Array, PDEProgram::Axis, PDEProgram::Float, PDEProgram::Index, PDEProgram::Nat, PDEProgram::Offset, PDEProgram::_snippet_ix>();
+            
+            inline __host__ PDEProgram::Array operator()(const PDEProgram::Array & u,
+              const PDEProgram::Array & v,
+                const PDEProgram::Array & u0,
+                  const PDEProgram::Array & u1,
+                    const PDEProgram::Array & u2,
+                      const PDEProgram::Float & c0,
+                        const PDEProgram::Float & c1,
+                          const PDEProgram::Float & c2,
+                            const PDEProgram::Float & c3,
+                              const PDEProgram::Float & c4) {
+              printf("forall_ix_snippet_cuda\n");
+
+              return __forall_ops.forall_ix_snippet_cuda(u, v, u0, u1, u2, c0, c1, c2, c3, c4);
+            };
+          };
+
+          struct _forall_ix_snippet {
+
+            _forall_ix_snippet() {}
+
+            forall_ops < PDEProgram::Array, PDEProgram::Axis, PDEProgram::Float, PDEProgram::Index, PDEProgram::Nat, PDEProgram::Offset, PDEProgram::_snippet_ix > __forall_ops = forall_ops<PDEProgram::Array, PDEProgram::Axis, PDEProgram::Float, PDEProgram::Index, PDEProgram::Nat, PDEProgram::Offset, PDEProgram::_snippet_ix>();
+
+            inline __host__ __device__ PDEProgram::Array operator()(const PDEProgram::Array & u,
+              const PDEProgram::Array & v,
+                const PDEProgram::Array & u0,
+                  const PDEProgram::Array & u1,
+                    const PDEProgram::Array & u2,
+                      const PDEProgram::Float & c0,
+                        const PDEProgram::Float & c1,
+                          const PDEProgram::Float & c2,
+                            const PDEProgram::Float & c3,
+                              const PDEProgram::Float & c4) {
+              return __forall_ops.forall_ix_snippet(u, v, u0, u1, u2, c0, c1, c2, c3, c4);
+            };
+          };
+          struct _snippet {
+
+            _snippet() {}
+
+            _forall_ix_snippet_cuda forall_ix_snippet_cuda = _forall_ix_snippet_cuda();
+
+            inline __host__ void operator()(PDEProgram::Array & u,
+              const PDEProgram::Array & v,
+                const PDEProgram::Array & u0,
+                  const PDEProgram::Array & u1,
+                    const PDEProgram::Array & u2,
+                      const PDEProgram::Float & c0,
+                        const PDEProgram::Float & c1,
+                          const PDEProgram::Float & c2,
+                            const PDEProgram::Float & c3,
+                              const PDEProgram::Float & c4) {
+              u = forall_ix_snippet_cuda.operator()(u, v, u0, u1, u2, c0, c1, c2, c3, c4);
+            };
+          };
           struct _step {
 
             _step() {}
 
 
-
+            _snippet_ix snippet_ix = _snippet_ix();
             _snippet snippet = _snippet();
 
             _zero zero = _zero();

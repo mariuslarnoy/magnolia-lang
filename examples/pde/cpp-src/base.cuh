@@ -177,6 +177,10 @@ struct array_ops {
 template <typename _Array, typename _Axis, typename _Float, typename _Index,
           typename _Nat, typename _Offset, class _snippet_ix>
 struct forall_ops {
+
+  forall_ops<_Array, _Axis, _Float, _Index,
+  _Nat, _Offset, _snippet_ix>() {};
+
   typedef _Array Array;
   typedef _Axis Axis;
   typedef _Float Float;
