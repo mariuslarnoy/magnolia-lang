@@ -174,6 +174,19 @@ struct array_ops {
   __host__ __device__ inline Offset unary_sub(const Offset &offset) { auto o = offset; o.value = -offset.value; return o; }
 };
 
+
+template<class _kernel>
+__global__ void forall_ix_snippet_cuda_x(array_ops::Array *res, array_ops::Array *u, array_ops::Array *v, array_ops::Array *u0, array_ops::Array *u1, array_ops::Array *u2, const array_ops::Float &c0,
+const array_ops::Float &c1, const array_ops::Float &c2, const array_ops::Float &c3, const array_ops::Float &c4, _kernel kernel)
+{
+  printf("entering kernel\n");
+  kernel(res,u,v,u0,u1,u2,c0,c1,c2,c3,c4);
+  
+  
+
+  printf("kernel done\n");
+}
+
 template <typename _Array, typename _Axis, typename _Float, typename _Index,
           typename _Nat, typename _Offset, class _snippet_ix>
 struct forall_ops {
@@ -248,9 +261,8 @@ struct forall_ops {
 
     __snippet_ix snippet_ix;
     __host__ __device__ void operator()(Array *res, Array *u, Array *v, Array *u0, Array *u1, Array *u2, float c0, float c1, float c2, float c3, float c4) {
-      //printf("in _forall_kernel\n");
         int i = blockIdx.x*blockDim.x+threadIdx.x;
-        //printf("i = %d\n", i);
+        printf("i = %d\n", i);
         //printf("SIDE = %d\n", SIDE);
         if (i < SIDE * SIDE * SIDE) {
             (*res)[i] = snippet_ix(*u, *v, *u0, *u1, *u2, c0, c1, c2, c3, c4, i);
@@ -258,31 +270,33 @@ struct forall_ops {
       }
   };
 
+  
   __host__ inline Array forall_ix_snippet_cuda(const Array &u, const Array &v,
     const Array &u0, const Array &u1, const Array &u2, const Float &c0,
     const Float &c1, const Float &c2, const Float &c3, const Float &c4) {
       _forall_kernel<_snippet_ix> forall_kernel;
 
+      printf("in snippet cuda, u[0] = %f\n", u[0]);
       //set value of forall_kernel
-      forall_kernel.snippet_ix = snippet_ix;
-      //printf("in forall_ix_snippet_cuda\n");
+      //forall_kernel.snippet_ix = snippet_ix;
+      printf("in forall_ix_snippet_cuda\n");
       array_ops::Array *u_d,*v_d,*d0, *d1, *d2;
-      //printf("creation of *u_d,*v_d,*d0,*d1,*d2 succeeded\n");
-      array_ops::Array *res_h, *res_d;
-      //printf("creation of *res_h,*res_d succeeded\n");
+      printf("creation of *u_d,*v_d,*d0,*d1,*d2 succeeded\n");
+      array_ops::Array res_h[SIDE*SIDE*SIDE], *res_d;
+      printf("creation of *res_h,*res_d succeeded\n");
 
       cudaMalloc(&res_d,sizeof(array_ops::Array));
-      //printf("cudaMalloc &res_d succeeded\n");
+      printf("cudaMalloc &res_d succeeded\n");
       cudaMalloc(&u_d,sizeof(array_ops::Array));
-      //printf("cudaMalloc &u_d succeeded\n");
+      printf("cudaMalloc &u_d succeeded\n");
       cudaMalloc(&v_d,sizeof(array_ops::Array));
-      //printf("cudaMalloc &v_d succeeded\n");
+      printf("cudaMalloc &v_d succeeded\n");
       cudaMalloc(&d0,sizeof(array_ops::Array));
-      //printf("cudaMalloc &d0 succeeded\n");
+      printf("cudaMalloc &d0 succeeded\n");
       cudaMalloc(&d1,sizeof(array_ops::Array));
-      //printf("cudaMalloc &d1 succeeded\n");
+      printf("cudaMalloc &d1 succeeded\n");
       cudaMalloc(&d2,sizeof(array_ops::Array));
-      //printf("cudaMalloc &d2 succeeded\n");      
+      printf("cudaMalloc &d2 succeeded\n");      
 
       cudaMemcpy(u_d,&u,sizeof(array_ops::Array),cudaMemcpyHostToDevice);
       cudaMemcpy(v_d,&v,sizeof(array_ops::Array),cudaMemcpyHostToDevice);
@@ -294,25 +308,12 @@ struct forall_ops {
       forall_ix_snippet_cuda_x<<<16,512>>>(res_d,u_d, v_d, d0, d1, d2, c0, c1, c2, c3, c4, forall_kernel);
 
       cudaDeviceSynchronize();
-      //printf("cudaDeviceSynchronize succeeded\n");
-      cudaMemcpy(&res_h,&res_d,sizeof(array_ops::Array),cudaMemcpyDeviceToHost);
-      //printf("cudaMemcpy &res_h device->host succeeded\n");      
-      
+      printf("cudaDeviceSynchronize succeeded\n");
+      cudaMemcpy(res_h,res_d,sizeof(array_ops::Array),cudaMemcpyDeviceToHost);
+      printf("cudaMemcpy &res_h device->host succeeded\n");
       return *res_h;
     }
 };
-
-template<class _kernel>
-__global__ void forall_ix_snippet_cuda_x(array_ops::Array *res, array_ops::Array *u, array_ops::Array *v, array_ops::Array *u0, array_ops::Array *u1, array_ops::Array *u2, const array_ops::Float &c0,
-const array_ops::Float &c1, const array_ops::Float &c2, const array_ops::Float &c3, const array_ops::Float &c4, _kernel kernel)
-{
-  //printf("entering kernel\n");
-  kernel(res,u,v,u0,u1,u2,c0,c1,c2,c3,c4);
-  
-  
-
-  //printf("kernel done\n");
-}
 
 inline void dumpsine(array_ops::Array &result) {
   double step = 0.01;

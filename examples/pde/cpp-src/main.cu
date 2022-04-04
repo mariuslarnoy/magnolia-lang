@@ -35,7 +35,7 @@ int main() {
 
     size_t side = SIDE; //256;
     size_t array_size = side*side*side;
-    size_t steps = 20;
+    size_t steps = 1;
     //Shape shape = Shape(std::vector<size_t>({ side, side, side }));
     Array u0, u1, u2;
     
