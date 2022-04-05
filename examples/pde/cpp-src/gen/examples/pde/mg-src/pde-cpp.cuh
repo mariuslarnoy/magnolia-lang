@@ -267,6 +267,7 @@ namespace examples {
               PDEProgram::Axis zero_ax = zero.operator()();
               PDEProgram::Offset one_of = one.operator()<Offset>();
               PDEProgram::Axis two_ax = two.operator()< Axis > ();
+
               PDEProgram::Float result = binary_add.operator()(psi.operator()(ix, u),
                mul.operator()(c4,binary_sub.operator()(mul.operator()(c3,
                  binary_sub.operator()(mul.operator()(c1,
@@ -283,6 +284,8 @@ namespace examples {
                                 psi.operator()(rotate_ix.operator()
                                 (ix, one.operator() < Axis > (), one_of), v)),
                                 psi.operator()(rotate_ix.operator()(ix, two_ax, unary_sub.operator()(one_of)), v)), psi.operator()(rotate_ix.operator()(ix, two_ax, one_of), v))), mul.operator()(mul.operator()(three(), c2), psi.operator()(ix, u0)))), mul.operator()(c0, binary_add.operator()(binary_add.operator()(mul.operator()(binary_sub.operator()(psi.operator()(rotate_ix.operator()(ix, zero_ax, one_of), v), psi.operator()(rotate_ix.operator()(ix, zero_ax, unary_sub.operator()(one_of)), v)), psi.operator()(ix, u0)), mul.operator()(binary_sub.operator()(psi.operator()(rotate_ix.operator()(ix, one.operator() < Axis > (), one_of), v), psi.operator()(rotate_ix.operator()(ix, one.operator() < Axis > (), unary_sub.operator()(one_of)), v)), psi.operator()(ix, u1))), mul.operator()(binary_sub.operator()(psi.operator()(rotate_ix.operator()(ix, two_ax, one_of), v), psi.operator()(rotate_ix.operator()(ix, two_ax, unary_sub.operator()(one_of)), v)), psi.operator()(ix, u2)))))));
+
+                                printf("snippet_ix result %f\n", result);
               return result;
             };
           };
@@ -348,7 +351,7 @@ namespace examples {
                             const PDEProgram::Float & c3,
                               const PDEProgram::Float & c4) {
              printf("snippet\n");
-              u = forall_ix_snippet_cuda.operator()(u, v, u0, u1, u2, c0, c1, c2, c3, c4);
+              u = forall_ix_snippet_cuda(u, v, u0, u1, u2, c0, c1, c2, c3, c4);
             };
           };
           struct _step {
@@ -373,7 +376,7 @@ namespace examples {
             _psi psi = _psi();
             _rotate rotate = _rotate();
 
-            inline __host__ __device__ void operator()(PDEProgram::Array & u0, PDEProgram::Array & u1, PDEProgram::Array & u2,
+            inline __host__ void operator()(PDEProgram::Array & u0, PDEProgram::Array & u1, PDEProgram::Array & u2,
               const PDEProgram::Float & nu,
                 const PDEProgram::Float & dx,
                   const PDEProgram::Float & dt) {
@@ -382,15 +385,15 @@ namespace examples {
               printf("one_f = %f\n", one_f);
               PDEProgram::Float _2 = two.operator() < Float > ();
               printf("_2 = %f\n", _2);
-              PDEProgram::Float c0 = div.operator()(div.operator()(one_f, _2), dx);
+              PDEProgram::Float c0 = div(div(one_f, _2), dx);
                 printf("c0 = %f\n", c0);
-              PDEProgram::Float c1 = div.operator()(div.operator()(one_f, dx), dx);
+              PDEProgram::Float c1 = div(div(one_f, dx), dx);
                 printf("c1 = %f\n", c1);
-              PDEProgram::Float c2 = div.operator()(div.operator()(_2, dx), dx);
+              PDEProgram::Float c2 = div(div(_2, dx), dx);
                 printf("c2 = %f\n", c2);
               PDEProgram::Float c3 = nu;
                 printf("c3 = %f\n", c3);
-              PDEProgram::Float c4 = div.operator()(dt, _2);
+              PDEProgram::Float c4 = div(dt, _2);
                 printf("c4 = %f\n", c4);
               PDEProgram::Array v0 = u0;
                 printf("v0[0] = %f\n", v0[0]);
@@ -398,13 +401,13 @@ namespace examples {
                 printf("v1[0] = %f\n", v1[0]);
               PDEProgram::Array v2 = u2;
                 printf("v2[0] = %f\n", v2[0]);
-              snippet.operator()(v0, u0, u0, u1, u2, c0, c1, c2, c3, c4);
+              snippet(v0, u0, u0, u1, u2, c0, c1, c2, c3, c4);
                 printf("snippet 1 succeeded\n");
-              snippet.operator()(v1, u1, u0, u1, u2, c0, c1, c2, c3, c4);
-              snippet.operator()(v2, u2, u0, u1, u2, c0, c1, c2, c3, c4);
-              snippet.operator()(u0, v0, u0, u1, u2, c0, c1, c2, c3, c4);
-              snippet.operator()(u1, v1, u0, u1, u2, c0, c1, c2, c3, c4);
-              snippet.operator()(u2, v2, u0, u1, u2, c0, c1, c2, c3, c4);
+              snippet(v1, u1, u0, u1, u2, c0, c1, c2, c3, c4);
+              snippet(v2, u2, u0, u1, u2, c0, c1, c2, c3, c4);
+              snippet(u0, v0, u0, u1, u2, c0, c1, c2, c3, c4);
+              snippet(u1, v1, u0, u1, u2, c0, c1, c2, c3, c4);
+              snippet(u2, v2, u0, u1, u2, c0, c1, c2, c3, c4);
             };
           };
 
