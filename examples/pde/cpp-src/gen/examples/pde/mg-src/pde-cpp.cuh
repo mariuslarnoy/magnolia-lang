@@ -295,7 +295,7 @@ namespace examples {
 
             forall_ops < PDEProgram::Array, PDEProgram::Axis, PDEProgram::Float, PDEProgram::Index, PDEProgram::Nat, PDEProgram::Offset, PDEProgram::_snippet_ix > __forall_ops = forall_ops<PDEProgram::Array, PDEProgram::Axis, PDEProgram::Float, PDEProgram::Index, PDEProgram::Nat, PDEProgram::Offset, PDEProgram::_snippet_ix>();
             
-            inline __host__ PDEProgram::Array operator()(const PDEProgram::Array & u,
+            inline __device__ PDEProgram::Array operator()(const PDEProgram::Array & u,
               const PDEProgram::Array & v,
                 const PDEProgram::Array & u0,
                   const PDEProgram::Array & u1,
@@ -334,7 +334,7 @@ namespace examples {
 
             _forall_ix_snippet_cuda forall_ix_snippet_cuda = _forall_ix_snippet_cuda();
 
-            inline __host__ __device__ void operator()(PDEProgram::Array & u,
+            inline __device__ void operator()(PDEProgram::Array & u,
               const PDEProgram::Array & v,
                 const PDEProgram::Array & u0,
                   const PDEProgram::Array & u1,
@@ -344,7 +344,7 @@ namespace examples {
                           const PDEProgram::Float & c2,
                             const PDEProgram::Float & c3,
                               const PDEProgram::Float & c4) {
-              u = forall_ix_snippet_cuda(u, v, u0, u1, u2, c0, c1, c2, c3, c4);
+              u.content = std::move(forall_ix_snippet_cuda(u, v, u0, u1, u2, c0, c1, c2, c3, c4).content);
             };
           };
           struct _step {
@@ -369,11 +369,13 @@ namespace examples {
             _psi psi = _psi();
             _rotate rotate = _rotate();
 
-            inline __device__ void operator()(PDEProgram::Array & u0, PDEProgram::Array & u1, PDEProgram::Array & u2,
+            inline __device__ void operator()(PDEProgram:: Array & v0, PDEProgram::Array & v1, PDEProgram::Array & v2, 
+			                      PDEProgram::Array & u0, PDEProgram::Array & u1, PDEProgram::Array & u2,
               const PDEProgram::Float & nu,
                 const PDEProgram::Float & dx,
                   const PDEProgram::Float & dt) {
-
+	      
+              printf("we're in step.operator()\n");
               PDEProgram::Float one_f = one.operator() < Float > ();
               PDEProgram::Float _2 = two.operator() < Float > ();
               PDEProgram::Float c0 = div(div(one_f, _2), dx);
@@ -381,9 +383,6 @@ namespace examples {
               PDEProgram::Float c2 = div(div(_2, dx), dx);
               PDEProgram::Float c3 = nu;
               PDEProgram::Float c4 = div(dt, _2);
-              PDEProgram::Array v0 = u0;
-              PDEProgram::Array v1 = u1;
-              PDEProgram::Array v2 = u2;
               snippet(v0, u0, u0, u1, u2, c0, c1, c2, c3, c4);
               snippet(v1, u1, u0, u1, u2, c0, c1, c2, c3, c4);
               snippet(v2, u2, u0, u1, u2, c0, c1, c2, c3, c4);
