@@ -252,7 +252,7 @@ namespace examples {
             _rotate rotate = _rotate();
 
 
-            inline __host__ __device__ PDEProgram::Float operator()(const PDEProgram::Array & u,
+            inline __device__ PDEProgram::Float operator()(const PDEProgram::Array & u,
               const PDEProgram::Array & v,
                 const PDEProgram::Array & u0,
                   const PDEProgram::Array & u1,
@@ -263,7 +263,6 @@ namespace examples {
                             const PDEProgram::Float & c3,
                               const PDEProgram::Float & c4,
                                 const PDEProgram::Index & ix) {
-              printf("snippet_ix\n");
               PDEProgram::Axis zero_ax = zero.operator()();
               PDEProgram::Offset one_of = one.operator()<Offset>();
               PDEProgram::Axis two_ax = two.operator()< Axis > ();
@@ -284,8 +283,6 @@ namespace examples {
                                 psi.operator()(rotate_ix.operator()
                                 (ix, one.operator() < Axis > (), one_of), v)),
                                 psi.operator()(rotate_ix.operator()(ix, two_ax, unary_sub.operator()(one_of)), v)), psi.operator()(rotate_ix.operator()(ix, two_ax, one_of), v))), mul.operator()(mul.operator()(three(), c2), psi.operator()(ix, u0)))), mul.operator()(c0, binary_add.operator()(binary_add.operator()(mul.operator()(binary_sub.operator()(psi.operator()(rotate_ix.operator()(ix, zero_ax, one_of), v), psi.operator()(rotate_ix.operator()(ix, zero_ax, unary_sub.operator()(one_of)), v)), psi.operator()(ix, u0)), mul.operator()(binary_sub.operator()(psi.operator()(rotate_ix.operator()(ix, one.operator() < Axis > (), one_of), v), psi.operator()(rotate_ix.operator()(ix, one.operator() < Axis > (), unary_sub.operator()(one_of)), v)), psi.operator()(ix, u1))), mul.operator()(binary_sub.operator()(psi.operator()(rotate_ix.operator()(ix, two_ax, one_of), v), psi.operator()(rotate_ix.operator()(ix, two_ax, unary_sub.operator()(one_of)), v)), psi.operator()(ix, u2)))))));
-
-                                printf("snippet_ix result %f\n", result);
               return result;
             };
           };
@@ -308,8 +305,6 @@ namespace examples {
                           const PDEProgram::Float & c2,
                             const PDEProgram::Float & c3,
                               const PDEProgram::Float & c4) {
-              printf("forall_ix_snippet_cuda\n");
-
               return __forall_ops.forall_ix_snippet_cuda(u, v, u0, u1, u2, c0, c1, c2, c3, c4);
             };
           };
@@ -330,7 +325,6 @@ namespace examples {
                           const PDEProgram::Float & c2,
                             const PDEProgram::Float & c3,
                               const PDEProgram::Float & c4) {
-                printf("forall_ix_snippet\n");
               return __forall_ops.forall_ix_snippet(u, v, u0, u1, u2, c0, c1, c2, c3, c4);
             };
           };
@@ -350,7 +344,6 @@ namespace examples {
                           const PDEProgram::Float & c2,
                             const PDEProgram::Float & c3,
                               const PDEProgram::Float & c4) {
-             printf("snippet\n");
               u = forall_ix_snippet_cuda(u, v, u0, u1, u2, c0, c1, c2, c3, c4);
             };
           };
@@ -382,27 +375,16 @@ namespace examples {
                   const PDEProgram::Float & dt) {
 
               PDEProgram::Float one_f = one.operator() < Float > ();
-              printf("one_f = %f\n", one_f);
               PDEProgram::Float _2 = two.operator() < Float > ();
-              printf("_2 = %f\n", _2);
               PDEProgram::Float c0 = div(div(one_f, _2), dx);
-                printf("c0 = %f\n", c0);
               PDEProgram::Float c1 = div(div(one_f, dx), dx);
-                printf("c1 = %f\n", c1);
               PDEProgram::Float c2 = div(div(_2, dx), dx);
-                printf("c2 = %f\n", c2);
               PDEProgram::Float c3 = nu;
-                printf("c3 = %f\n", c3);
               PDEProgram::Float c4 = div(dt, _2);
-                printf("c4 = %f\n", c4);
               PDEProgram::Array v0 = u0;
-                printf("v0[0] = %f\n", v0[0]);
               PDEProgram::Array v1 = u1;
-                printf("v1[0] = %f\n", v1[0]);
               PDEProgram::Array v2 = u2;
-                printf("v2[0] = %f\n", v2[0]);
               snippet(v0, u0, u0, u1, u2, c0, c1, c2, c3, c4);
-                printf("snippet 1 succeeded\n");
               snippet(v1, u1, u0, u1, u2, c0, c1, c2, c3, c4);
               snippet(v2, u2, u0, u1, u2, c0, c1, c2, c3, c4);
               snippet(u0, v0, u0, u1, u2, c0, c1, c2, c3, c4);

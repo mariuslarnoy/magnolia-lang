@@ -35,22 +35,14 @@ int main() {
 
     size_t side = SIDE; //256;
     size_t array_size = side*side*side;
-    size_t steps = 1;
+    size_t steps = 20;
     //Shape shape = Shape(std::vector<size_t>({ side, side, side }));
     Array u0, u1, u2;
     
     dumpsine(u0);
-    std::cout << "dumpsine(u0) succeeded. u0[0]:" << std::endl;
-    std::cout << u0[0] << std::endl;
     dumpsine(u1);
-    std::cout << "dumpsine(u1) succeeded. u1[0]:" << std::endl;
-    std::cout << u1[0] << std::endl;
     dumpsine(u2);
-    std::cout << "dumpsine(u2) succeeded. u2[0]:" << std::endl;
-    std::cout << u2[0] << std::endl;
 
-
-    std::cout << "u0[0] = " << u0[0] << std::endl;
     //std::cout << "before loop" << std::endl;
     for (auto i = 0; i < steps; ++i) {
         //std::cout << "step nr: " << i << std::endl;
