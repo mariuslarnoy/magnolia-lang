@@ -17,6 +17,16 @@
 #define NTILES 4
 #define NB_CORES 2
 
+class Managed {
+ void *operator new(size_t len) {
+ void *ptr;
+ cudaMallocManaged(&ptr, len);
+ return ptr;
+ }
+ void operator delete(void *ptr) {
+ cudaFree(ptr);
+ }
+};
 
 struct array_ops {
   typedef float Float;
@@ -31,14 +41,16 @@ struct array_ops {
     size_t value = 1;
   };
 
-  struct Array {
+  struct Array : public Managed {
     Float * content;
     __host__ __device__ Array() {
       this -> content = new Float[SIDE * SIDE * SIDE];
     }
 
     __host__ __device__ Array(const Array & other) {
-      this -> content = new Float[SIDE * SIDE * SIDE];
+      
+      cudaMallocManaged(&content, SIDE*SIDE*SIDE);
+      //this -> content = new Float[SIDE * SIDE * SIDE];
       memcpy(this -> content, other.content,
         SIDE * SIDE * SIDE * sizeof(Float));
     }
@@ -238,7 +250,7 @@ __host__ __device__ inline void dumpsine(array_ops::Array & result) {
 }
 
 template<class _snippet_ix>
-  __global__ void ix_snippet_global(array_ops::Array *res, const array_ops::Array *u, const array_ops::Array *v, const array_ops::Array *u0, const array_ops::Array *u1, const array_ops::Array *u2,
+  __global__ void ix_snippet_global(array_ops::Array res, const array_ops::Array u, const array_ops::Array v, const array_ops::Array u0, const array_ops::Array u1, const array_ops::Array u2,
     const array_ops::Float c0,
       const array_ops::Float c1,
         const array_ops::Float c2,
@@ -250,7 +262,7 @@ template<class _snippet_ix>
     int i = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (i < SIDE*SIDE*SIDE) {
-      res->content[i] = snippet_ix(*u, *v, *u0, *u1, *u2, c0, c1, c2, c3, c4, i);
+      res[i] = snippet_ix(u, v, u0, u1, u2, c0, c1, c2, c3, c4, i);
     }
 
 }
@@ -271,7 +283,7 @@ template < typename _Array, typename _Axis, typename _Float, typename _Index,
 
     _snippet_ix snippet_ix;
 
-    __host__ inline Array forall_ix_snippet_cuda(const Array & u,
+    __device__ inline Array forall_ix_snippet_cuda(const Array & u,
       const Array & v,
         const Array & u0,
           const Array & u1,
@@ -281,7 +293,7 @@ template < typename _Array, typename _Axis, typename _Float, typename _Index,
                   const Float & c2,
                     const Float & c3,
                       const Float & c4) {
-      
+     /* 
       Float *u_host_content, *v_host_content, *u0_host_content, *u1_host_content, *u2_host_content;
       
       Float *u_dev_content, *v_dev_content, *u0_dev_content, *u1_dev_content, *u2_dev_content;
@@ -329,8 +341,10 @@ template < typename _Array, typename _Axis, typename _Float, typename _Index,
       cudaMemcpy(&(u2_dev->content), &u2_dev_content, sizeof(u2_dev->content), cudaMemcpyHostToDevice);
 
       
-
-      ix_snippet_global<<<16,512>>>(res_dev, u_dev, v_dev, u0_dev, u1_dev, u2_dev, c0, c1, c2, c3, c4, snippet_ix);
+      for (auto i = 0; i < 50; ++i){ 
+        std::cout << i << std::endl;
+	ix_snippet_global<<<1,512>>>(res_dev, u_dev, v_dev, u0_dev, u1_dev, u2_dev, c0, c1, c2, c3, c4, snippet_ix);
+      }
 
       cudaDeviceSynchronize();
 
@@ -339,7 +353,28 @@ template < typename _Array, typename _Axis, typename _Float, typename _Index,
       Array res = Array();
       memcpy(res.content, res_host_content, sizeof(*res_host_content) * SIDE * SIDE * SIDE);
       
+      cudaFree(u_dev_content);
+      cudaFree(v_dev_content);
+      cudaFree(u0_dev_content);
+      cudaFree(u1_dev_content);
+      cudaFree(u1_dev_content);
+      cudaFree(u2_dev_content);
+      
+      cudaFree(res_dev);
+      cudaFree(u_dev);
+      cudaFree(v_dev);
+      cudaFree(u0_dev);
+      cudaFree(u1_dev);
+      cudaFree(u2_dev);
+      
+      cudaDeviceReset();      
       return res;
+
+      */
+	Array res = Array();
+	ix_snippet_global<<<1,512>>>(res, u, v, u0, u1, u2, c0, c1, c2, c3, c4, snippet_ix);
+
+	return res;
     }
 
     __host__ __device__ inline Array forall_ix_snippet(const Array & u,

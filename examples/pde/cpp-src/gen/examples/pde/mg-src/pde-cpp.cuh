@@ -334,7 +334,7 @@ namespace examples {
 
             _forall_ix_snippet_cuda forall_ix_snippet_cuda = _forall_ix_snippet_cuda();
 
-            inline __host__ void operator()(PDEProgram::Array & u,
+            inline __host__ __device__ void operator()(PDEProgram::Array & u,
               const PDEProgram::Array & v,
                 const PDEProgram::Array & u0,
                   const PDEProgram::Array & u1,
@@ -369,7 +369,7 @@ namespace examples {
             _psi psi = _psi();
             _rotate rotate = _rotate();
 
-            inline __host__ void operator()(PDEProgram::Array & u0, PDEProgram::Array & u1, PDEProgram::Array & u2,
+            inline __device__ void operator()(PDEProgram::Array & u0, PDEProgram::Array & u1, PDEProgram::Array & u2,
               const PDEProgram::Float & nu,
                 const PDEProgram::Float & dx,
                   const PDEProgram::Float & dt) {
