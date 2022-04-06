@@ -13,7 +13,7 @@
 
 //#include <omp.h>
 
-#define SIDE 30
+#define SIDE 512
 #define NTILES 4
 #define NB_CORES 2
 
@@ -238,7 +238,7 @@ __host__ __device__ inline void dumpsine(array_ops::Array & result) {
 }
 
 template<class _snippet_ix>
-  __global__ void ix_snippet_global(array_ops::Array res, const array_ops::Array u, const array_ops::Array v, const array_ops::Array u0, const array_ops::Array u1, const array_ops::Array u2,
+  __global__ void ix_snippet_global(array_ops::Array *res, const array_ops::Array *u, const array_ops::Array *v, const array_ops::Array *u0, const array_ops::Array *u1, const array_ops::Array *u2,
     const array_ops::Float c0,
       const array_ops::Float c1,
         const array_ops::Float c2,
@@ -248,9 +248,9 @@ template<class _snippet_ix>
     
 
     int i = blockIdx.x * blockDim.x + threadIdx.x;
-    printf("%d\n", i);
+
     if (i < SIDE*SIDE*SIDE) {
-      res[i] = snippet_ix(u, v, u0, u1, u2, c0, c1, c2, c3, c4, i);
+      res->content[i] = snippet_ix(*u, *v, *u0, *u1, *u2, c0, c1, c2, c3, c4, i);
     }
 
 }
@@ -271,21 +271,6 @@ template < typename _Array, typename _Axis, typename _Float, typename _Index,
 
     _snippet_ix snippet_ix;
 
-    __host__ inline void allocateDeviceArray(Array * hostArray, Array& deviceArray) {
-
-      deviceArray = Array();
-      // allocate elems
-      if (cudaMalloc(&deviceArray.content, sizeof(Float) * SIDE * SIDE * SIDE)!= cudaSuccess) {
-        printf("error allocating device array\n");
-      }
-
-      // copy elems
-      if (cudaMemcpy(deviceArray.content, hostArray->content, sizeof(Float) * SIDE * SIDE * SIDE, cudaMemcpyHostToDevice) != cudaSuccess) {
-        printf("error copying device array\n");
-      }
-
-    }
-
     __host__ inline Array forall_ix_snippet_cuda(const Array & u,
       const Array & v,
         const Array & u0,
@@ -297,36 +282,62 @@ template < typename _Array, typename _Axis, typename _Float, typename _Index,
                     const Float & c3,
                       const Float & c4) {
       
+      Float *u_host_content, *v_host_content, *u0_host_content, *u1_host_content, *u2_host_content;
+      
+      Float *u_dev_content, *v_dev_content, *u0_dev_content, *u1_dev_content, *u2_dev_content;
+
+      Float *res_host_content, *res_dev_content;
+
+      u_host_content = u.content;
+      v_host_content = v.content;
+      u0_host_content = u0.content;
+      u1_host_content = u1.content;
+      u2_host_content = u2.content;
+
+      res_host_content = new Float[SIDE * SIDE * SIDE];
+
+      cudaMalloc((void**)&u_dev_content, sizeof(Float) * SIDE * SIDE * SIDE);
+      cudaMalloc((void**)&v_dev_content, sizeof(Float) * SIDE * SIDE * SIDE);
+      cudaMalloc((void**)&u0_dev_content, sizeof(Float) * SIDE * SIDE * SIDE);
+      cudaMalloc((void**)&u1_dev_content, sizeof(Float) * SIDE * SIDE * SIDE);
+      cudaMalloc((void**)&u2_dev_content, sizeof(Float) * SIDE * SIDE * SIDE);
+      cudaMalloc((void**)&res_dev_content, sizeof(Float) * SIDE * SIDE * SIDE);
+      
+      Array *res_dev, *u_dev, *v_dev, *u0_dev, *u1_dev, *u2_dev;
+
+      cudaMalloc((void**)&res_dev, sizeof(*res_dev));
+      cudaMalloc((void**)&u_dev, sizeof(*u_dev));
+      cudaMalloc((void**)&v_dev, sizeof(*v_dev));
+      cudaMalloc((void**)&u0_dev, sizeof(*u0_dev));
+      cudaMalloc((void**)&u1_dev, sizeof(*u1_dev));
+      cudaMalloc((void**)&u2_dev, sizeof(*u2_dev));
+      cudaMalloc((void**)&res_dev, sizeof(*res_dev));
+
+      cudaMemcpy(res_dev_content,res_host_content,sizeof(*res_dev)*SIDE*SIDE*SIDE,cudaMemcpyHostToDevice);
+      cudaMemcpy(u_dev_content, u_host_content, sizeof(Float) * SIDE * SIDE * SIDE, cudaMemcpyHostToDevice);
+      cudaMemcpy(v_dev_content, v_host_content, sizeof(Float) * SIDE * SIDE * SIDE, cudaMemcpyHostToDevice);
+      cudaMemcpy(u0_dev_content, u0_host_content, sizeof(Float) * SIDE * SIDE * SIDE, cudaMemcpyHostToDevice);
+      cudaMemcpy(u1_dev_content, u1_host_content, sizeof(Float) * SIDE * SIDE * SIDE, cudaMemcpyHostToDevice);
+      cudaMemcpy(u2_dev_content, u2_host_content, sizeof(Float) * SIDE * SIDE * SIDE, cudaMemcpyHostToDevice);
+      cudaMemcpy(res_dev_content, u_host_content, sizeof(Float) * SIDE * SIDE * SIDE, cudaMemcpyHostToDevice);
+
+      cudaMemcpy(&(res_dev->content), &res_dev_content, sizeof(res_dev->content), cudaMemcpyHostToDevice);
+      cudaMemcpy(&(u_dev->content), &u_dev_content, sizeof(u_dev->content), cudaMemcpyHostToDevice);
+      cudaMemcpy(&(v_dev->content), &v_dev_content, sizeof(v_dev->content), cudaMemcpyHostToDevice);
+      cudaMemcpy(&(u0_dev->content), &u0_dev_content, sizeof(u0_dev->content), cudaMemcpyHostToDevice);
+      cudaMemcpy(&(u1_dev->content), &u1_dev_content, sizeof(u1_dev->content), cudaMemcpyHostToDevice);
+      cudaMemcpy(&(u2_dev->content), &u2_dev_content, sizeof(u2_dev->content), cudaMemcpyHostToDevice);
+
+      
+
+      ix_snippet_global<<<16,512>>>(res_dev, u_dev, v_dev, u0_dev, u1_dev, u2_dev, c0, c1, c2, c3, c4, snippet_ix);
+
+      cudaDeviceSynchronize();
+
+      cudaMemcpy(res_host_content, res_dev_content, sizeof(*res_host_content), cudaMemcpyDeviceToHost);
+
       Array res = Array();
-      Array res_d, u_d, v_d, u0_d, u1_d, u2_d;
-    
-      Array u_h = Array(u);
-      Array v_h = Array(v);
-      Array u0_h = Array(u0);
-      Array u1_h = Array(u1);
-      Array u2_h = Array(u2);
-
-      Array *res_ptr = &res;
-      Array *u_ptr = &u_h;
-      Array *v_ptr = &v_h;
-      Array *u0_ptr = &u0_h;
-      Array *u1_ptr = &u1_h;
-      Array *u2_ptr = &u2_h;
-
-      allocateDeviceArray(res_ptr, res_d);
-      allocateDeviceArray(u_ptr, u_d);
-      allocateDeviceArray(v_ptr, v_d);
-      allocateDeviceArray(u0_ptr, u0_d);
-      allocateDeviceArray(u1_ptr, u1_d);
-      allocateDeviceArray(u2_ptr, u2_d);    
-      
-      printf("allocated\n");
-      ix_snippet_global<<<1,1>>>(res_d,u_d,v_d,u0_d,u1_d,u2_d,c0,c1, c2, c3, c4, snippet_ix);
-      
-      if (cudaMemcpy(res_ptr->content,res_d.content,sizeof(Float)*SIDE*SIDE*SIDE,cudaMemcpyDeviceToHost)
-        != cudaSuccess) {
-        printf("error copying device array to host\n");
-      }
+      memcpy(res.content, res_host_content, sizeof(*res_host_content) * SIDE * SIDE * SIDE);
       
       return res;
     }
