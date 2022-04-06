@@ -13,7 +13,7 @@
 
 //#include <omp.h>
 
-#define SIDE 512
+#define SIDE 512 
 #define NTILES 4
 #define NB_CORES 2
 
