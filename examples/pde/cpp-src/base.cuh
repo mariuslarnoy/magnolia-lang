@@ -34,12 +34,10 @@ struct array_ops {
   struct Array {
     Float * content;
     __host__ __device__ Array() {
-      //printf("Array()\n");
       this -> content = new Float[SIDE * SIDE * SIDE];
     }
 
     __host__ __device__ Array(const Array & other) {
-      //printf("Array(const Array& other)\n");
       this -> content = new Float[SIDE * SIDE * SIDE];
       memcpy(this -> content, other.content,
         SIDE * SIDE * SIDE * sizeof(Float));
@@ -247,9 +245,10 @@ template<class _snippet_ix>
           const array_ops::Float c3,
             const array_ops::Float c4, _snippet_ix snippet_ix) {
     
-    printf("core\n");
+    
 
     int i = blockIdx.x * blockDim.x + threadIdx.x;
+    printf("%d\n", i);
     if (i < SIDE*SIDE*SIDE) {
       res[i] = snippet_ix(u, v, u0, u1, u2, c0, c1, c2, c3, c4, i);
     }
@@ -272,13 +271,18 @@ template < typename _Array, typename _Axis, typename _Float, typename _Index,
 
     _snippet_ix snippet_ix;
 
-    __host__ void allocateDeviceArray(Array * hostArray, Array& deviceArray) {
+    __host__ inline void allocateDeviceArray(Array * hostArray, Array& deviceArray) {
 
+      deviceArray = Array();
       // allocate elems
-      cudaMalloc(&deviceArray.content, sizeof(Float) * SIDE * SIDE * SIDE);
+      if (cudaMalloc(&deviceArray.content, sizeof(Float) * SIDE * SIDE * SIDE)!= cudaSuccess) {
+        printf("error allocating device array\n");
+      }
 
       // copy elems
-      cudaMemcpy(deviceArray.content, hostArray->content, sizeof(Float) * SIDE * SIDE * SIDE, cudaMemcpyHostToDevice);
+      if (cudaMemcpy(deviceArray.content, hostArray->content, sizeof(Float) * SIDE * SIDE * SIDE, cudaMemcpyHostToDevice) != cudaSuccess) {
+        printf("error copying device array\n");
+      }
 
     }
 
@@ -302,12 +306,12 @@ template < typename _Array, typename _Axis, typename _Float, typename _Index,
       Array u1_h = Array(u1);
       Array u2_h = Array(u2);
 
-      Array* res_ptr = &res;
-      Array* u_ptr = &u_h;
-      Array* v_ptr = &v_h;
-      Array* u0_ptr = &u0_h;
-      Array* u1_ptr = &u1_h;
-      Array* u2_ptr = &u2_h;
+      Array *res_ptr = &res;
+      Array *u_ptr = &u_h;
+      Array *v_ptr = &v_h;
+      Array *u0_ptr = &u0_h;
+      Array *u1_ptr = &u1_h;
+      Array *u2_ptr = &u2_h;
 
       allocateDeviceArray(res_ptr, res_d);
       allocateDeviceArray(u_ptr, u_d);
@@ -316,10 +320,13 @@ template < typename _Array, typename _Axis, typename _Float, typename _Index,
       allocateDeviceArray(u1_ptr, u1_d);
       allocateDeviceArray(u2_ptr, u2_d);    
       
-
-      ix_snippet_global<<<1,2>>>(res_d,u_d,v_d,u0_d,u1_d,u2_d,c0,c1, c2, c3, c4, snippet_ix);
+      printf("allocated\n");
+      ix_snippet_global<<<1,1>>>(res_d,u_d,v_d,u0_d,u1_d,u2_d,c0,c1, c2, c3, c4, snippet_ix);
       
-      cudaMemcpy(res_ptr->content,res_d.content,sizeof(Float)*SIDE*SIDE*SIDE,cudaMemcpyDeviceToHost);
+      if (cudaMemcpy(res_ptr->content,res_d.content,sizeof(Float)*SIDE*SIDE*SIDE,cudaMemcpyDeviceToHost)
+        != cudaSuccess) {
+        printf("error copying device array to host\n");
+      }
       
       return res;
     }
