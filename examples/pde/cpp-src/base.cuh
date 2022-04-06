@@ -311,7 +311,6 @@ template < typename _Array, typename _Axis, typename _Float, typename _Index,
       cudaMalloc((void**)&u0_dev, sizeof(*u0_dev));
       cudaMalloc((void**)&u1_dev, sizeof(*u1_dev));
       cudaMalloc((void**)&u2_dev, sizeof(*u2_dev));
-      cudaMalloc((void**)&res_dev, sizeof(*res_dev));
 
       cudaMemcpy(res_dev_content,res_host_content,sizeof(*res_dev)*SIDE*SIDE*SIDE,cudaMemcpyHostToDevice);
       cudaMemcpy(u_dev_content, u_host_content, sizeof(Float) * SIDE * SIDE * SIDE, cudaMemcpyHostToDevice);
@@ -339,6 +338,21 @@ template < typename _Array, typename _Axis, typename _Float, typename _Index,
       Array res = Array();
       memcpy(res.content, res_host_content, sizeof(*res_host_content) * SIDE * SIDE * SIDE);
       
+      cudaFree(u_dev_content);
+      cudaFree(v_dev_content);
+      cudaFree(u0_dev_content);
+      cudaFree(u1_dev_content);
+      cudaFree(u2_dev_content);
+      cudaFree(res_dev_content);
+      cudaFree(res_dev);
+      cudaFree(u_dev);
+      cudaFree(v_dev);
+      cudaFree(u0_dev);
+      cudaFree(u1_dev);
+      cudaFree(u2_dev);
+
+      cudaDeviceReset();
+     
       return res;
     }
 
