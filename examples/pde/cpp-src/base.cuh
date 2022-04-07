@@ -13,7 +13,7 @@
 
 //#include <omp.h>
 
-#define SIDE 512 
+#define SIDE 32 
 #define NTILES 4
 #define NB_CORES 2
 
@@ -244,14 +244,11 @@ template<class _snippet_ix>
           const array_ops::Float c3,
             const array_ops::Float c4, _snippet_ix snippet_ix) {
     
-    
-    printf("kernel\n");
     int i = blockIdx.x * blockDim.x + threadIdx.x;
-
+    
     if (i < SIDE*SIDE*SIDE) {
       res[i] = snippet_ix(u, v, u0, u1, u2, c0, c1, c2, c3, c4, i);
     }
-
 }
 
 template < typename _Array, typename _Axis, typename _Float, typename _Index,
@@ -280,10 +277,13 @@ template < typename _Array, typename _Axis, typename _Float, typename _Index,
                   const Float & c2,
                     const Float & c3,
                       const Float & c4) {
+
+  
 	
-	printf("snippet_cuda\n");
 	Array res = Array();
-	ix_snippet_global<<<1,512>>>(res, u, v, u0, u1, u2, c0, c1, c2, c3, c4, snippet_ix);
+	ix_snippet_global<<<1,32>>>(res, u, v, u0, u1, u2, c0, c1, c2, c3, c4, snippet_ix);
+
+  cudaDeviceSynchronize();
 
 	return res;
     }
@@ -303,7 +303,7 @@ template < typename _Array, typename _Axis, typename _Float, typename _Index,
       for (size_t i = 0; i < SIDE * SIDE * SIDE; ++i) {
         result[i] = snippet_ix(u, v, u0, u1, u2, c0, c1, c2, c3, c4, i);
       }
-
+      
       return result;
     }  
   };
