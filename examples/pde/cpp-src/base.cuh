@@ -282,7 +282,7 @@ template < typename _Array, typename _Axis, typename _Float, typename _Index,
 	
 	Array res = Array();
 	ix_snippet_global<<<1,512>>>(res, u, v, u0, u1, u2, c0, c1, c2, c3, c4, snippet_ix);
-	cudaDeviceSynchronize();
+	__syncthreads();
 	return res;
     }
 

@@ -23,8 +23,8 @@ template<class _PDEProgram>
 __global__ void global_step(array_ops::Array &v0, array_ops::Array &v1, array_ops::Array& v2,
                             array_ops::Array& u0, array_ops::Array &u1, array_ops::Array &u2,
                             array_ops::Float s_nu, array_ops::Float s_dx, array_ops::Float s_dt, _PDEProgram pde) {
-    printf("v0[0] = %f\n", v0[0]);
-    pde.step(v0,v1,v2,u0,u1,u2,s_nu,s_dx,s_dt);
+  pde.step(v0,v1,v2,u0,u1,u2,s_nu,s_dx,s_dt);
+  printf("fff\n");
 }
 
 int main() {
@@ -42,7 +42,7 @@ int main() {
 
     size_t side = SIDE; //256;
     size_t array_size = side*side*side;
-    size_t steps = 50;
+    size_t steps = 5;
     //Shape shape = Shape(std::vector<size_t>({ side, side, side }));
     Array u0, u1, u2;
     
@@ -101,7 +101,7 @@ int main() {
       //std::cout << v0_dev << std::endl;
       for (auto i = 0; i< steps; i++) {
         global_step<<<1,1>>>(*v0_dev,*v1_dev,*v2_dev,*u0_dev,*u1_dev,*u2_dev,s_nu,s_dx,s_dt, pde);
-	
+        
 	cudaDeviceSynchronize();
 
 	cudaMemcpy(v0_dev_content, u0_dev_content, sizeof(Float) * array_size, cudaMemcpyDeviceToDevice);
