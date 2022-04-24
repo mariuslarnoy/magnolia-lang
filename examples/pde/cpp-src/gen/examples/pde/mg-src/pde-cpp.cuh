@@ -345,9 +345,7 @@ namespace examples {
                             const PDEProgram::Float & c3,
                               const PDEProgram::Float & c4) {
               
-              
-                      u.content = std::move(forall_ix_snippet_cuda(u, v, u0, u1, u2, c0, c1, c2, c3, c4).content);
-              
+                      u = forall_ix_snippet_cuda(u,v, u0, u1, u2, c0, c1, c2, c3, c4);
             };
           };
           struct _step {
@@ -385,7 +383,6 @@ namespace examples {
               PDEProgram::Float c2 = div(div(_2, dx), dx);
               PDEProgram::Float c3 = nu;
               PDEProgram::Float c4 = div(dt, _2);
-              
               snippet(v0, u0, u0, u1, u2, c0, c1, c2, c3, c4);
               snippet(v1, u1, u0, u1, u2, c0, c1, c2, c3, c4);
               snippet(v2, u2, u0, u1, u2, c0, c1, c2, c3, c4);

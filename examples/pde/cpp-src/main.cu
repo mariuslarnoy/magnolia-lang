@@ -23,8 +23,9 @@ template<class _PDEProgram>
 __global__ void global_step(array_ops::Array &v0, array_ops::Array &v1, array_ops::Array& v2,
                             array_ops::Array& u0, array_ops::Array &u1, array_ops::Array &u2,
                             array_ops::Float s_nu, array_ops::Float s_dx, array_ops::Float s_dt, _PDEProgram pde) {
-  pde.step(v0,v1,v2,u0,u1,u2,s_nu,s_dx,s_dt);
-  printf("fff\n");
+	printf("%f %f %f \n", u0[0], u1[0], u2[0]);
+	if (blockIdx.x * blockDim.x + threadIdx.x == 0)
+	 pde.step(v0,v1,v2,u0,u1,u2,s_nu,s_dx,s_dt);
 }
 
 int main() {
@@ -42,7 +43,7 @@ int main() {
 
     size_t side = SIDE; //256;
     size_t array_size = side*side*side;
-    size_t steps = 5;
+    size_t steps = 50;
     //Shape shape = Shape(std::vector<size_t>({ side, side, side }));
     Array u0, u1, u2;
     
@@ -97,17 +98,33 @@ int main() {
       cudaMemcpy(&(u0_dev->content), &u0_dev_content, sizeof(u0_dev->content), cudaMemcpyHostToDevice);
       cudaMemcpy(&(u1_dev->content), &u1_dev_content, sizeof(u1_dev->content), cudaMemcpyHostToDevice);
       cudaMemcpy(&(u2_dev->content), &u2_dev_content, sizeof(u2_dev->content), cudaMemcpyHostToDevice);
-
+      
+      // record pointers to content 
+      
       //std::cout << v0_dev << std::endl;
       for (auto i = 0; i< steps; i++) {
-        global_step<<<1,1>>>(*v0_dev,*v1_dev,*v2_dev,*u0_dev,*u1_dev,*u2_dev,s_nu,s_dx,s_dt, pde);
-        
-	cudaDeviceSynchronize();
+/*
+	Float * v0x ,* v1x, * v2x,* u0x,* u1x, * u2x;
 
+	cudaMemcpy(&v0x, &(v0_dev->content), sizeof(v0_dev->content), cudaMemcpyDeviceToHost);	
+	cudaMemcpy(&v1x, &(v1_dev->content), sizeof(v1_dev->content), cudaMemcpyDeviceToHost);
+	cudaMemcpy(&v2x, &(v2_dev->content), sizeof(v2_dev->content), cudaMemcpyDeviceToHost);
+	cudaMemcpy(&u0x, &(u0_dev->content), sizeof(u0_dev->content), cudaMemcpyDeviceToHost);	
+        cudaMemcpy(&u1x, &(u1_dev->content), sizeof(u1_dev->content), cudaMemcpyDeviceToHost);
+	cudaMemcpy(&u2x, &(u2_dev->content), sizeof(u2_dev->content), cudaMemcpyDeviceToHost);
+*/	
+	global_step<<<1,1>>>(*v0_dev,*v1_dev,*v2_dev,*u0_dev,*u1_dev,*u2_dev,s_nu,s_dx,s_dt, pde);
+  /*      
+	cudaFree(v0x);
+	cudaFree(v1x);
+	cudaFree(v2x);
+   	cudaFree(u0x);
+  	cudaFree(u1x);
+	cudaFree(u2x);
+*/
 	cudaMemcpy(v0_dev_content, u0_dev_content, sizeof(Float) * array_size, cudaMemcpyDeviceToDevice);
         cudaMemcpy(v1_dev_content, u1_dev_content, sizeof(Float) * array_size, cudaMemcpyDeviceToDevice);
         cudaMemcpy(v2_dev_content, u2_dev_content, sizeof(Float) * array_size, cudaMemcpyDeviceToDevice);
-
       }
 
 
@@ -121,7 +138,7 @@ int main() {
       Array u2_res = Array();
       memcpy(u2_res.content, u2_host_content, sizeof(*u2_host_content) * SIDE * SIDE * SIDE);
 	
-      std::cout << u0_res[0] << " " << u1_res[0] << " " << u2_res[0] << std::endl;
+//      std::cout << u0_res[0] << " " << u1_res[0] << " " << u2_res[0] << std::endl;
       cudaFree(v0_dev_content);
       cudaFree(v1_dev_content);
       cudaFree(v2_dev_content);
