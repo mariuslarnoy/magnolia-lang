@@ -10,22 +10,12 @@ static const double s_dt = 0.00082212448155679772495;
 static const double s_nu = 1.0;
 static const double s_dx = 1.0;
 
-/*
-template<>
-Array forall_ops<Array,Axis,Float,Index,Nat,Offset,PDEProgram::_snippet_ix>::forall_ix_snippet_cuda(const Array &u, const Array &v,
-const Array &u0, const Array &u1, const Array &u2, const Float &c0,
-const Float &c1, const Float &c2, const Float &c3, const Float &c4) {
-
-    
-  }
-*/
 template<class _PDEProgram>
-__global__ void global_step(array_ops::Array &v0, array_ops::Array &v1, array_ops::Array& v2,
-                            array_ops::Array& u0, array_ops::Array &u1, array_ops::Array &u2,
+__global__ void global_step(array_ops::Array &v0, array_ops::Array &v1, array_ops::Array &v2,
+                            array_ops::Array &u0, array_ops::Array &u1, array_ops::Array &u2,
                             array_ops::Float s_nu, array_ops::Float s_dx, array_ops::Float s_dt, _PDEProgram pde) {
 	printf("%f %f %f \n", u0[0], u1[0], u2[0]);
-	if (blockIdx.x * blockDim.x + threadIdx.x == 0)
-	 pde.step(v0,v1,v2,u0,u1,u2,s_nu,s_dx,s_dt);
+	pde.step(v0,v1,v2,u0,u1,u2,s_nu,s_dx,s_dt);
 }
 
 int main() {
@@ -44,7 +34,7 @@ int main() {
     size_t side = SIDE; //256;
     size_t array_size = side*side*side;
     size_t steps = 10;
-    //Shape shape = Shape(std::vector<size_t>({ side, side, side }));
+    std::cout << "Dims: " << side << "*" << side << "*" << side << ", steps: " << steps << std::endl;
     Array u0, u1, u2;
     
     dumpsine(u0);
@@ -103,8 +93,7 @@ int main() {
       
       //std::cout << v0_dev << std::endl;
       for (auto i = 0; i< steps; i++) {
-	/*
-	Float * v0x ,* v1x, * v2x,* u0x,* u1x, * u2x;
+	/*Float * v0x ,* v1x, * v2x,* u0x,* u1x, * u2x;
 
 	cudaMemcpy(&v0x, &(v0_dev->content), sizeof(v0_dev->content), cudaMemcpyDeviceToHost);	
 	cudaMemcpy(&v1x, &(v1_dev->content), sizeof(v1_dev->content), cudaMemcpyDeviceToHost);
@@ -112,17 +101,17 @@ int main() {
 	cudaMemcpy(&u0x, &(u0_dev->content), sizeof(u0_dev->content), cudaMemcpyDeviceToHost);	
         cudaMemcpy(&u1x, &(u1_dev->content), sizeof(u1_dev->content), cudaMemcpyDeviceToHost);
 	cudaMemcpy(&u2x, &(u2_dev->content), sizeof(u2_dev->content), cudaMemcpyDeviceToHost);
-*/	
+	*/
 	global_step<<<1,1>>>(*v0_dev,*v1_dev,*v2_dev,*u0_dev,*u1_dev,*u2_dev,s_nu,s_dx,s_dt, pde);
-  /*      
+	cudaDeviceSynchronize();
+	/*
 	cudaFree(v0x);
 	cudaFree(v1x);
 	cudaFree(v2x);
    	cudaFree(u0x);
   	cudaFree(u1x);
 	cudaFree(u2x);
-*/
-	cudaDeviceSynchronize();
+	*/
 	cudaMemcpy(v0_dev_content, u0_dev_content, sizeof(Float) * array_size, cudaMemcpyDeviceToDevice);
         cudaMemcpy(v1_dev_content, u1_dev_content, sizeof(Float) * array_size, cudaMemcpyDeviceToDevice);
         cudaMemcpy(v2_dev_content, u2_dev_content, sizeof(Float) * array_size, cudaMemcpyDeviceToDevice);

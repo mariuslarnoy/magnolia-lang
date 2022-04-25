@@ -13,7 +13,7 @@
 
 //#include <omp.h>
 
-#define SIDE 64
+#define SIDE 128
 #define NTILES 4
 #define NB_CORES 2
 
@@ -34,7 +34,7 @@ struct array_ops {
     Float * content;
     __host__ __device__ Array() {
       this -> content = new Float[SIDE * SIDE * SIDE];
-      //printf("Array created: %x\n", this->content);
+      printf("Array created: %x\n", this->content);
     }
 
     
@@ -250,6 +250,7 @@ template<class _snippet_ix>
     if (i < SIDE*SIDE*SIDE) {
       res[i] = snippet_ix(u, v, u0, u1, u2, c0, c1, c2, c3, c4, i);
     }
+    __syncthreads();
 }
 
 template < typename _Array, typename _Axis, typename _Float, typename _Index,
@@ -281,8 +282,8 @@ template < typename _Array, typename _Axis, typename _Float, typename _Index,
 
   
 	Array res = Array();
-	ix_snippet_global<<<128,2048>>>(res, u, v, u0, u1, u2, c0, c1, c2, c3, c4, snippet_ix);
-	cudaDeviceSynchronize();
+	ix_snippet_global<<<1024,2048>>>(res, u, v, u0, u1, u2, c0, c1, c2, c3, c4, snippet_ix);
+	__syncthreads();
 	//printf("after kernel run: %x\n", res.content);
 	return res;
     }
