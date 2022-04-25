@@ -43,7 +43,7 @@ int main() {
 
     size_t side = SIDE; //256;
     size_t array_size = side*side*side;
-    size_t steps = 50;
+    size_t steps = 10;
     //Shape shape = Shape(std::vector<size_t>({ side, side, side }));
     Array u0, u1, u2;
     
@@ -103,7 +103,7 @@ int main() {
       
       //std::cout << v0_dev << std::endl;
       for (auto i = 0; i< steps; i++) {
-/*
+	/*
 	Float * v0x ,* v1x, * v2x,* u0x,* u1x, * u2x;
 
 	cudaMemcpy(&v0x, &(v0_dev->content), sizeof(v0_dev->content), cudaMemcpyDeviceToHost);	
@@ -122,6 +122,7 @@ int main() {
   	cudaFree(u1x);
 	cudaFree(u2x);
 */
+	cudaDeviceSynchronize();
 	cudaMemcpy(v0_dev_content, u0_dev_content, sizeof(Float) * array_size, cudaMemcpyDeviceToDevice);
         cudaMemcpy(v1_dev_content, u1_dev_content, sizeof(Float) * array_size, cudaMemcpyDeviceToDevice);
         cudaMemcpy(v2_dev_content, u2_dev_content, sizeof(Float) * array_size, cudaMemcpyDeviceToDevice);

@@ -345,7 +345,9 @@ namespace examples {
                             const PDEProgram::Float & c3,
                               const PDEProgram::Float & c4) {
               
-                      u = forall_ix_snippet_cuda(u,v, u0, u1, u2, c0, c1, c2, c3, c4);
+                      Array res = forall_ix_snippet_cuda(u,v, u0, u1, u2, c0, c1, c2, c3, c4);
+		      u.content = res.content;
+		      delete[] res.content;
             };
           };
           struct _step {
