@@ -1,4 +1,5 @@
 #pragma once
+#pragma __forceinline__
 
 #include <array>
 #include <cassert>
@@ -13,7 +14,7 @@
 
 //#include <omp.h>
 
-#define SIDE 128
+#define SIDE 32 
 #define NTILES 4
 #define NB_CORES 2
 
@@ -34,7 +35,7 @@ struct array_ops {
     Float * content;
     __host__ __device__ Array() {
       this -> content = new Float[SIDE * SIDE * SIDE];
-      printf("Array created: %x\n", this->content);
+     printf("Array created: %x\n", this->content);
     }
 
     
@@ -239,6 +240,12 @@ __host__ __device__ inline void dumpsine(array_ops::Array & result) {
   }
 }
 
+__host__ __device__ inline void zeros(array_ops::Array & a) {
+  for (auto i = 0; i < SIDE*SIDE*SIDE; ++i)
+    a[i] = 0;
+}
+
+
 template<class _snippet_ix>
   __global__ void ix_snippet_global(array_ops::Array res, const array_ops::Array u, const array_ops::Array v, const array_ops::Array u0, const array_ops::Array u1, const array_ops::Array u2,
     const array_ops::Float c0,
@@ -248,9 +255,8 @@ template<class _snippet_ix>
             const array_ops::Float c4, _snippet_ix snippet_ix) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < SIDE*SIDE*SIDE) {
-      res[i] = snippet_ix(u, v, u0, u1, u2, c0, c1, c2, c3, c4, i);
+	    res[i] = snippet_ix(u, v, u0, u1, u2, c0, c1, c2, c3, c4, i);
     }
-    __syncthreads();
 }
 
 template < typename _Array, typename _Axis, typename _Float, typename _Index,
@@ -279,12 +285,11 @@ template < typename _Array, typename _Axis, typename _Float, typename _Index,
                   const Float & c2,
                     const Float & c3,
                       const Float & c4) {
-
-  
-	Array res = Array();
-	ix_snippet_global<<<1024,2048>>>(res, u, v, u0, u1, u2, c0, c1, c2, c3, c4, snippet_ix);
+	printf("res:");
+        Array res;
+	ix_snippet_global<<<64,512>>>(res, u, v, u0, u1, u2, c0, c1, c2, c3, c4, snippet_ix);
 	__syncthreads();
-	//printf("after kernel run: %x\n", res.content);
+//	printf("res[0] = %f\n",res[0]);
 	return res;
     }
 

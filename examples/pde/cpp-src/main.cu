@@ -14,6 +14,9 @@ template<class _PDEProgram>
 __global__ void global_step(array_ops::Array &v0, array_ops::Array &v1, array_ops::Array &v2,
                             array_ops::Array &u0, array_ops::Array &u1, array_ops::Array &u2,
                             array_ops::Float s_nu, array_ops::Float s_dx, array_ops::Float s_dt, _PDEProgram pde) {
+	v0 = u0;
+	v1 = u1;
+	v2 = u2;
 	printf("%f %f %f \n", u0[0], u1[0], u2[0]);
 	pde.step(v0,v1,v2,u0,u1,u2,s_nu,s_dx,s_dt);
 }
@@ -44,7 +47,7 @@ int main() {
     Array v0 = Array();
     Array v1 = Array();
     Array v2 = Array();
-    
+
     memcpy(v0.content, u0.content, SIDE*SIDE*SIDE*sizeof(Float));
     memcpy(v1.content, u1.content, SIDE*SIDE*SIDE*sizeof(Float));
     memcpy(v2.content, u2.content, SIDE*SIDE*SIDE*sizeof(Float));
@@ -65,7 +68,6 @@ int main() {
       cudaMalloc((void**)&u0_dev_content, sizeof(Float) * SIDE * SIDE * SIDE);
       cudaMalloc((void**)&u1_dev_content, sizeof(Float) * SIDE * SIDE * SIDE);
       cudaMalloc((void**)&u2_dev_content, sizeof(Float) * SIDE * SIDE * SIDE);
-
       Array  *v0_dev, *v1_dev, *v2_dev, *u0_dev, *u1_dev, *u2_dev;
 	
       cudaMalloc((void**)&v0_dev, sizeof(*v0_dev));
@@ -88,34 +90,16 @@ int main() {
       cudaMemcpy(&(u0_dev->content), &u0_dev_content, sizeof(u0_dev->content), cudaMemcpyHostToDevice);
       cudaMemcpy(&(u1_dev->content), &u1_dev_content, sizeof(u1_dev->content), cudaMemcpyHostToDevice);
       cudaMemcpy(&(u2_dev->content), &u2_dev_content, sizeof(u2_dev->content), cudaMemcpyHostToDevice);
-      
-      // record pointers to content 
-      
-      //std::cout << v0_dev << std::endl;
       for (auto i = 0; i< steps; i++) {
-	/*Float * v0x ,* v1x, * v2x,* u0x,* u1x, * u2x;
 
-	cudaMemcpy(&v0x, &(v0_dev->content), sizeof(v0_dev->content), cudaMemcpyDeviceToHost);	
-	cudaMemcpy(&v1x, &(v1_dev->content), sizeof(v1_dev->content), cudaMemcpyDeviceToHost);
-	cudaMemcpy(&v2x, &(v2_dev->content), sizeof(v2_dev->content), cudaMemcpyDeviceToHost);
-	cudaMemcpy(&u0x, &(u0_dev->content), sizeof(u0_dev->content), cudaMemcpyDeviceToHost);	
-        cudaMemcpy(&u1x, &(u1_dev->content), sizeof(u1_dev->content), cudaMemcpyDeviceToHost);
-	cudaMemcpy(&u2x, &(u2_dev->content), sizeof(u2_dev->content), cudaMemcpyDeviceToHost);
-	*/
 	global_step<<<1,1>>>(*v0_dev,*v1_dev,*v2_dev,*u0_dev,*u1_dev,*u2_dev,s_nu,s_dx,s_dt, pde);
 	cudaDeviceSynchronize();
-	/*
-	cudaFree(v0x);
-	cudaFree(v1x);
-	cudaFree(v2x);
-   	cudaFree(u0x);
-  	cudaFree(u1x);
-	cudaFree(u2x);
-	*/
+/*	
 	cudaMemcpy(v0_dev_content, u0_dev_content, sizeof(Float) * array_size, cudaMemcpyDeviceToDevice);
         cudaMemcpy(v1_dev_content, u1_dev_content, sizeof(Float) * array_size, cudaMemcpyDeviceToDevice);
         cudaMemcpy(v2_dev_content, u2_dev_content, sizeof(Float) * array_size, cudaMemcpyDeviceToDevice);
-      }
+  */
+    	}
 
 
         

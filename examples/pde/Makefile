@@ -8,9 +8,9 @@ CPP_SOURCES := $(shell find $(CPP_SOURCE_DIR) -name "*.cu")
 
 CC := nvcc 
 
-# if clang++, can use
-# -mllvm -inline-threshold=1000000000
-CCFLAGS := -I$(CPP_SOURCE_DIR) -arch=sm_80 -std=c++17 -rdc=true -g -lcudadevrt 
+CCFLAGS := -I$(CPP_SOURCE_DIR) -arch=sm_80 -std=c++17 -rdc=true -g -lcudadevrt
+#clang: --cuda-gpu-arch=sm_80 -Lcm/shared/apps/cuda11.6/lib64 -lcudart_static -ldl -lrt -pthread -std=c++17
+#nvcc : -arch=sm_80 -std=c++17 -rdc=true -g -lcudadevrt
 #-g -mtune=native -march=native -O3 -std=c++17 -I$(CPP_SOURCE_DIR) -fopenmp
 MKDIR := @mkdir
 RM := @rm
