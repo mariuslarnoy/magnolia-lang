@@ -276,7 +276,7 @@ template < typename _Array, typename _Axis, typename _Float, typename _Index,
 
     _snippet_ix snippet_ix;
 
-    __device__ inline Array forall_ix_snippet_cuda(const Array & u,
+    __device__ inline Array forall_ix_snippet_cuda(Array & res, const Array & u,
       const Array & v,
         const Array & u0,
           const Array & u1,
@@ -286,11 +286,8 @@ template < typename _Array, typename _Axis, typename _Float, typename _Index,
                   const Float & c2,
                     const Float & c3,
                       const Float & c4) {
-	printf("res:");
-        Array res;
 	ix_snippet_global<<<BLOCK_SIZE,THREAD_SIZE>>>(res, u, v, u0, u1, u2, c0, c1, c2, c3, c4, snippet_ix);
 	__syncthreads();
-//	printf("res[0] = %f\n",res[0]);
 	return res;
     }
 
