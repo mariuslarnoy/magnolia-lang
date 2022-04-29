@@ -14,7 +14,7 @@
 
 //#include <omp.h>
 
-#define SIDE 32 
+#define SIDE SIZE 
 #define NTILES 4
 #define NB_CORES 2
 
@@ -36,6 +36,7 @@ struct array_ops {
     __host__ __device__ Array() {
       this -> content = new Float[SIDE * SIDE * SIDE];
      printf("Array created: %x\n", this->content);
+     printf("Size: %d\n", sizeof(content));
     }
 
     
@@ -287,7 +288,7 @@ template < typename _Array, typename _Axis, typename _Float, typename _Index,
                       const Float & c4) {
 	printf("res:");
         Array res;
-	ix_snippet_global<<<64,512>>>(res, u, v, u0, u1, u2, c0, c1, c2, c3, c4, snippet_ix);
+	ix_snippet_global<<<BLOCK_SIZE,THREAD_SIZE>>>(res, u, v, u0, u1, u2, c0, c1, c2, c3, c4, snippet_ix);
 	__syncthreads();
 //	printf("res[0] = %f\n",res[0]);
 	return res;
