@@ -7,12 +7,12 @@ CPP_SOURCE_DIR := cpp-src
 CPP_SOURCES := $(shell find $(CPP_SOURCE_DIR) -name "*.cu")
 DEFINES := -DPAD0=0 -DPAD1=0 -DPAD2=0
 
-CC := clang++
+CC := nvcc 
 
 # if clang++, can use
 # -mllvm -inline-threshold=1000000000
 # 
-CCFLAGS := -I$(CPP_SOURCE_DIR) --cuda-gpu-arch=sm_86 -Lcm/shared/apps/cuda11.6/lib64 -lcudart_static -ldl -lrt -pthread -std=c++17 
+CCFLAGS := -I$(CPP_SOURCE_DIR) -arch=sm_80 -std=c++17 -rdc=true -g -lcudadevrt 
 
 MKDIR := @mkdir
 RM := @rm
