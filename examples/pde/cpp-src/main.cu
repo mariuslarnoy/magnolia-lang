@@ -18,8 +18,9 @@ __global__ void global_step(array_ops::Array &res, array_ops::Array &v0, array_o
 	v0 = u0;
 	v1 = u1;
 	v2 = u2;
-	printf("%f %f %f \n", u0[0], u1[0], u2[0]);
 	pde.step(res,v0,v1,v2,u0,u1,u2,s_nu,s_dx,s_dt);
+	printf("%f %f %f \n", u0[0], u1[0], u2[0]);
+        printf("adr: %x\n", &u0);
 	}
 }
 
@@ -107,11 +108,25 @@ int main() {
       cudaMemcpy(&(u2_dev->content), &u2_dev_content, sizeof(u2_dev->content), cudaMemcpyHostToDevice);
       cudaMemcpy(&(res_dev->content),&res_dev_content, sizeof(res_dev->content),cudaMemcpyHostToDevice);
       for (auto i = 0; i< steps; i++) {
-
+	
+	std::cout << "adr before: " << &*u0_dev << std::endl;
 	global_step<<<1,1>>>(*res_dev,*v0_dev,*v1_dev,*v2_dev,*u0_dev,*u1_dev,*u2_dev,s_nu,s_dx,s_dt, pde);
 	cudaDeviceSynchronize();
 
-	 cudaMemcpy(&(u0_dev->content), &u0_dev_content, sizeof(u0_dev->content), cudaMemcpyHostToDevice);
+      cudaMemcpy(u0_host_content,u0_dev_content, sizeof(*u0_host_content)*array_size, cudaMemcpyDeviceToHost);
+      cudaMemcpy(u1_host_content,u1_dev_content, sizeof(*u1_host_content)*array_size, cudaMemcpyDeviceToHost);
+      cudaMemcpy(u2_host_content,u2_dev_content, sizeof(*u2_host_content)*array_size, cudaMemcpyDeviceToHost);
+
+      cudaFree(&u0_dev);
+      cudaFree(&u1_dev);
+      cudaFree(&u2_dev);
+            cudaMalloc((void**)&u0_dev, sizeof(*u0_dev));
+      cudaMalloc((void**)&u1_dev, sizeof(*u1_dev));
+      cudaMalloc((void**)&u2_dev, sizeof(*u2_dev));
+cudaMemcpy(u0_dev_content, u0_host_content, sizeof(Float) * SIDE * SIDE * SIDE, cudaMemcpyHostToDevice);
+      cudaMemcpy(u1_dev_content, u1_host_content, sizeof(Float) * SIDE * SIDE * SIDE, cudaMemcpyHostToDevice);
+      cudaMemcpy(u2_dev_content, u2_host_content, sizeof(Float) * SIDE * SIDE * SIDE, cudaMemcpyHostToDevice);
+cudaMemcpy(&(u0_dev->content), &u0_dev_content, sizeof(u0_dev->content), cudaMemcpyHostToDevice);
       cudaMemcpy(&(u1_dev->content), &u1_dev_content, sizeof(u1_dev->content), cudaMemcpyHostToDevice);
       cudaMemcpy(&(u2_dev->content), &u2_dev_content, sizeof(u2_dev->content), cudaMemcpyHostToDevice);
 
