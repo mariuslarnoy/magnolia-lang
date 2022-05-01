@@ -35,8 +35,7 @@ struct array_ops {
     Float * content;
     __host__ __device__ Array() {
       this -> content = new Float[SIDE * SIDE * SIDE];
-     printf("Array created: %x\n", this->content);
-     printf("Size: %d\n", sizeof(content));
+      printf("Array created: %p\n", (void*)&content);
     }
 
     
@@ -276,7 +275,7 @@ template < typename _Array, typename _Axis, typename _Float, typename _Index,
 
     _snippet_ix snippet_ix;
 
-    __device__ inline Array forall_ix_snippet_cuda(Array & res, const Array & u,
+    __device__ inline Array forall_ix_snippet_cuda(const Array & u,
       const Array & v,
         const Array & u0,
           const Array & u1,
@@ -286,7 +285,8 @@ template < typename _Array, typename _Axis, typename _Float, typename _Index,
                   const Float & c2,
                     const Float & c3,
                       const Float & c4) {
-	ix_snippet_global<<<BLOCK_SIZE,THREAD_SIZE>>>(res, u, v, u0, u1, u2, c0, c1, c2, c3, c4, snippet_ix);
+	Array res;
+        ix_snippet_global<<<BLOCK_SIZE,THREAD_SIZE>>>(res, u, v, u0, u1, u2, c0, c1, c2, c3, c4, snippet_ix);
 	__syncthreads();
 	return res;
     }
