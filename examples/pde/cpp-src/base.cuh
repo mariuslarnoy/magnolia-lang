@@ -35,33 +35,29 @@ struct array_ops {
     Float * content;
     __host__ __device__ Array() {
       this -> content = new Float[SIDE * SIDE * SIDE];
-      printf("Array created: %p\n", (void*)&content);
+//      printf("Array created: %p\n", (void*)&content);
     }
 
-    
-/*
+   /* 
     __host__ __device__ Array(const Array & other) {
       this -> content = new Float[SIDE * SIDE * SIDE];
       memcpy(this -> content, other.content,
         SIDE * SIDE * SIDE * sizeof(Float));
     }
-
     __host__ __device__ Array(Array && other) {
-      this -> content = std::move(other.content);
+      this -> content = other.content;
     }
-
     __host__ __device__ Array & operator = (const Array & other) {
       this -> content = new Float[SIDE * SIDE * SIDE];
       memcpy(this -> content, other.content,
         SIDE * SIDE * SIDE * sizeof(Float));
       return *this;
     }
-
     __host__ __device__ Array & operator = (Array && other) {
       this -> content = std::move(other.content);
       return *this;
     }
-*/
+ */
     __host__ __device__ inline Float operator[](const Index & ix) const {
       return this -> content[ix];
     }
