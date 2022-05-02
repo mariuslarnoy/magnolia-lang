@@ -29,9 +29,9 @@ __global__ void global_step(Array &v0, Array &v1, Array &v2,
 	  
 	  for (int i = 0; i < steps; ++i) {
   	 
-	    v0.content = u0.content;
-	    v1.content = u1.content;
-	    v2.content = u2.content;
+	    v0 = u0;
+	    v1 = u1;
+	    v2 = u2;
 	    printf("%f %f %f \n", u0[0], u1[0], u2[0]);
 	    pde.step(v0,v1,v2,u0,u1,u2,s_nu,s_dx,s_dt);
 	  }
