@@ -344,10 +344,7 @@ namespace examples {
                           const PDEProgram::Float & c2,
                             const PDEProgram::Float & c3,
                               const PDEProgram::Float & c4) {
-             	      Array res = forall_ix_snippet_cuda(u, v, u0, u1, u2, c0, c1, c2, c3, c4);
-		      u.content = res.content;
-		      delete res.content;
-		      cudaFree(&res);
+             	      u = forall_ix_snippet_cuda(u, v, u0, u1, u2, c0, c1, c2, c3, c4);
 	    };
           };
           struct _step {
@@ -372,8 +369,7 @@ namespace examples {
             _psi psi = _psi();
             _rotate rotate = _rotate();
 
-            inline __device__ void operator()(PDEProgram:: Array & v0, PDEProgram::Array & v1, PDEProgram::Array & v2, 
-			                      PDEProgram::Array & u0, PDEProgram::Array & u1, PDEProgram::Array & u2,
+            inline __device__ void operator()(PDEProgram::Array & u0, PDEProgram::Array & u1, PDEProgram::Array & u2,
               const PDEProgram::Float & nu,
                 const PDEProgram::Float & dx,
                   const PDEProgram::Float & dt) {
@@ -385,13 +381,16 @@ namespace examples {
               PDEProgram::Float c2 = div(div(_2, dx), dx);
               PDEProgram::Float c3 = nu;
               PDEProgram::Float c4 = div(dt, _2);
+	      PDEProgram::Array v0 = u0;
+	      PDEProgram::Array v1 = u1;
+	      PDEProgram::Array v2 = u2;
               snippet(v0, u0, u0, u1, u2, c0, c1, c2, c3, c4);
               snippet(v1, u1, u0, u1, u2, c0, c1, c2, c3, c4);
               snippet(v2, u2, u0, u1, u2, c0, c1, c2, c3, c4);
               snippet(u0, v0, u0, u1, u2, c0, c1, c2, c3, c4);
               snippet(u1, v1, u0, u1, u2, c0, c1, c2, c3, c4);
               snippet(u2, v2, u0, u1, u2, c0, c1, c2, c3, c4);
-            };
+	    };
           };
 
           _step step = _step();
