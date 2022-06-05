@@ -20,11 +20,13 @@ static const size_t steps = 10;
   typedef array_ops::Nat Nat;
   typedef array_ops::Offset Offset;
 
+  typedef forall_ops<Array, Axis, Float, Index, Nat, Offset> ForallOps;
 __global__ void global_step(Array &v0, Array &v1, Array &v2,
                             Array &u0, Array &u1, Array &u2,
                             Float s_nu, Float s_dx, Float s_dt) {
 	if(threadIdx.x == 0) {
 	  
+    ForallOps forall_ops;
 	  for (int i = 0; i < steps; ++i) {
   	 
 	    v0 = u0;
@@ -37,16 +39,6 @@ __global__ void global_step(Array &v0, Array &v1, Array &v2,
 }
 
 int main(void) {
-  /*
-  typedef array_ops ArrayOps;
-
-  typedef array_ops::Array Array;
-  typedef array_ops::Index Index;
-  typedef array_ops::Axis Axis;
-  typedef array_ops::Float Float;
-  typedef array_ops::Nat Nat;
-  typedef array_ops::Offset Offset;
-  */
 
     size_t side = SIDE; //256;
     size_t array_size = side*side*side;

@@ -35,29 +35,8 @@ struct array_ops {
     Float * content;
     __host__ __device__ Array() {
       this -> content = new Float[SIDE * SIDE * SIDE];
-//      printf("Array created: %p\n", (void*)&content);
     }
 
-   /* 
-    __host__ __device__ Array(const Array & other) {
-      this -> content = new Float[SIDE * SIDE * SIDE];
-      memcpy(this -> content, other.content,
-        SIDE * SIDE * SIDE * sizeof(Float));
-    }
-    __host__ __device__ Array(Array && other) {
-      this -> content = other.content;
-    }
-    __host__ __device__ Array & operator = (const Array & other) {
-      this -> content = new Float[SIDE * SIDE * SIDE];
-      memcpy(this -> content, other.content,
-        SIDE * SIDE * SIDE * sizeof(Float));
-      return *this;
-    }
-    __host__ __device__ Array & operator = (Array && other) {
-      this -> content = std::move(other.content);
-      return *this;
-    }
- */
     __host__ __device__ inline Float operator[](const Index & ix) const {
       return this -> content[ix];
     }
@@ -241,26 +220,59 @@ __host__ __device__ inline void zeros(array_ops::Array & a) {
     a[i] = 0;
 }
 
+inline __device__ array_ops::Float snippet_cuda(const array_ops::Array & u,
+  const array_ops::Array & v,
+    const array_ops::Array & u0,
+      const array_ops::Array & u1,
+        const array_ops::Array & u2,
+          const array_ops::Float & c0,
+            const array_ops::Float & c1,
+              const array_ops::Float & c2,
+                const array_ops::Float & c3,
+                  const array_ops::Float & c4,
+                    const array_ops::Index & ix) {
+  
+array_ops ArrayOps;
+  array_ops::Axis zero_ax = ArrayOps.zero_axis();
+  array_ops::Offset one_of = ArrayOps.one_offset();
+  array_ops::Axis two_ax = ArrayOps.two_axis();
+  array_ops::Axis one_ax = ArrayOps.one_axis();
 
-template<class _snippet_ix>
-  __global__ void ix_snippet_global(array_ops::Array res, const array_ops::Array u, const array_ops::Array v, const array_ops::Array u0, const array_ops::Array u1, const array_ops::Array u2,
+  array_ops::Float result = ArrayOps.binary_add(ArrayOps.psi(ix, u),
+   ArrayOps.mul(c4,ArrayOps.binary_sub(ArrayOps.mul(c3,
+     ArrayOps.binary_sub(ArrayOps.mul(c1,
+     ArrayOps.binary_add(ArrayOps.binary_add
+        (ArrayOps.binary_add(ArrayOps.binary_add
+            (ArrayOps.binary_add(ArrayOps.psi
+                (ArrayOps.rotate_ix(ix, zero_ax, 
+                    ArrayOps.unary_sub(one_of)), v),
+                    ArrayOps.psi(ArrayOps.rotate_ix(ix, 
+                    zero_ax, one_of), v)), ArrayOps.psi
+                    (ArrayOps.rotate_ix(ix, 
+                    one_ax, 
+                    ArrayOps.unary_sub(one_of)), v)),
+                    ArrayOps.psi(ArrayOps.rotate_ix
+                    (ix, one_ax, one_of), v)),
+                    ArrayOps.psi(ArrayOps.rotate_ix(ix, two_ax, ArrayOps.unary_sub(one_of)), v)), ArrayOps.psi(ArrayOps.rotate_ix(ix, two_ax, one_of), v))), ArrayOps.mul(ArrayOps.mul(3, c2), ArrayOps.psi(ix, u0)))), ArrayOps.mul(c0, ArrayOps.binary_add(ArrayOps.binary_add(ArrayOps.mul(ArrayOps.binary_sub(ArrayOps.psi(ArrayOps.rotate_ix(ix, zero_ax, one_of), v), ArrayOps.psi(ArrayOps.rotate_ix(ix, zero_ax, ArrayOps.unary_sub(one_of)), v)), ArrayOps.psi(ix, u0)), ArrayOps.mul(ArrayOps.binary_sub(ArrayOps.psi(ArrayOps.rotate_ix(ix, one_ax, one_of), v), ArrayOps.psi(ArrayOps.rotate_ix(ix, one_ax, ArrayOps.unary_sub(one_of)), v)), ArrayOps.psi(ix, u1))), ArrayOps.mul(ArrayOps.binary_sub(ArrayOps.psi(ArrayOps.rotate_ix(ix, two_ax, one_of), v), ArrayOps.psi(ArrayOps.rotate_ix(ix, two_ax, ArrayOps.unary_sub(one_of)), v)), ArrayOps.psi(ix, u2)))))));
+  return result;
+}
+
+__global__ void ix_snippet_global(array_ops::Array res, const array_ops::Array u, const array_ops::Array v, const array_ops::Array u0, const array_ops::Array u1, const array_ops::Array u2,
     const array_ops::Float c0,
       const array_ops::Float c1,
         const array_ops::Float c2,
           const array_ops::Float c3,
-            const array_ops::Float c4, _snippet_ix snippet_ix) {
+            const array_ops::Float c4) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < SIDE*SIDE*SIDE) {
-	    res[i] = snippet_ix(u, v, u0, u1, u2, c0, c1, c2, c3, c4, i);
+	    res[i] = snippet_cuda(u, v, u0, u1, u2, c0, c1, c2, c3, c4, i);
     }
 }
 
 template < typename _Array, typename _Axis, typename _Float, typename _Index,
-  typename _Nat, typename _Offset, class _snippet_ix >
+  typename _Nat, typename _Offset>
   struct forall_ops {
 
-    forall_ops < _Array, _Axis, _Float, _Index,
-      _Nat, _Offset, _snippet_ix > () {};
 
     typedef _Array Array;
     typedef _Axis Axis;
@@ -268,8 +280,6 @@ template < typename _Array, typename _Axis, typename _Float, typename _Index,
     typedef _Index Index;
     typedef _Nat Nat;
     typedef _Offset Offset;
-
-    _snippet_ix snippet_ix;
 
 __device__ inline Array forall_ix_snippet_cuda(const Array & u,
       const Array & v,
@@ -282,10 +292,11 @@ __device__ inline Array forall_ix_snippet_cuda(const Array & u,
                     const Float & c3,
                       const Float & c4) {
 	Array res;
-        ix_snippet_global<<<BLOCK_SIZE,THREAD_SIZE>>>(res, u, v, u0, u1, u2, c0, c1, c2, c3, c4, snippet_ix);
-	__syncthreads();
+        ix_snippet_global<<<BLOCK_SIZE,THREAD_SIZE>>>(res, u, v, u0, u1, u2, c0, c1, c2, c3, c4);
+  cudaDeviceSynchronize();
 	return res;
-    }
+  
+}
 
 inline __device__ void step( Array & v0, Array & v1, Array & v2, 
       Array & u0, Array & u1, Array & u2,
@@ -293,54 +304,21 @@ inline __device__ void step( Array & v0, Array & v1, Array & v2,
       const Float & dx,
       const Float & dt) {
 
+array_ops ArrayOps;
 Float one_f = 1.0;
 Float _2 = 2.0;
-Float c0 = div(div(one_f, _2), dx);
-Float c1 = div(div(one_f, dx), dx);
-Float c2 = div(div(_2, dx), dx);
+Float c0 = ArrayOps.div(ArrayOps.div(one_f, _2), dx);
+Float c1 = ArrayOps.div(ArrayOps.div(one_f, dx), dx);
+Float c2 = ArrayOps.div(ArrayOps.div(_2, dx), dx);
 Float c3 = nu;
-Float c4 = div(dt, _2);
-snippet(v0, u0, u0, u1, u2, c0, c1, c2, c3, c4);
-snippet(v1, u1, u0, u1, u2, c0, c1, c2, c3, c4);
-snippet(v2, u2, u0, u1, u2, c0, c1, c2, c3, c4);
-snippet(u0, v0, u0, u1, u2, c0, c1, c2, c3, c4);
-snippet(u1, v1, u0, u1, u2, c0, c1, c2, c3, c4);
-snippet(u2, v2, u0, u1, u2, c0, c1, c2, c3, c4);
-}
-
-
-inline __device__ Float snippet_cuda(const Array & u,
-  const Array & v,
-    const Array & u0,
-      const Array & u1,
-        const Array & u2,
-          const Float & c0,
-            const Float & c1,
-              const Float & c2,
-                const Float & c3,
-                  const Float & c4,
-                    const Index & ix) {
-  Axis zero_ax = 0;
-  Offset one_of = 0;
-  Axis two_ax = 2;
-
-  Float result = binary_add(psi(ix, u),
-   mul(c4,binary_sub(mul(c3,
-     binary_sub(mul(c1,
-     binary_add(binary_add
-        (binary_add(binary_add
-            (binary_add(psi
-                (rotate_ix(ix, zero_ax, 
-                    unary_sub(one_of)), v),
-                    psi(rotate_ix(ix, 
-                    zero_ax, one_of), v)), psi
-                    (rotate_ix(ix, 
-                    one < Axis > (), 
-                    unary_sub(one_of)), v)),
-                    psi(rotate_ix
-                    (ix, one < Axis > (), one_of), v)),
-                    psi(rotate_ix(ix, two_ax, unary_sub(one_of)), v)), psi(rotate_ix(ix, two_ax, one_of), v))), mul(mul(three(), c2), psi(ix, u0)))), mul(c0, binary_add(binary_add(mul(binary_sub(psi(rotate_ix(ix, zero_ax, one_of), v), psi(rotate_ix(ix, zero_ax, unary_sub(one_of)), v)), psi(ix, u0)), mul(binary_sub(psi(rotate_ix(ix, one < Axis > (), one_of), v), psi(rotate_ix(ix, one < Axis > (), unary_sub(one_of)), v)), psi(ix, u1))), mul(binary_sub(psi(rotate_ix(ix, two_ax, one_of), v), psi(rotate_ix(ix, two_ax, unary_sub(one_of)), v)), psi(ix, u2)))))));
-  return result;
+Float c4 = ArrayOps.div(dt, _2);
+printf("hihi\n");
+v0 = forall_ix_snippet_cuda(v0, u0, u0, u1, u2, c0, c1, c2, c3, c4);
+v1 = forall_ix_snippet_cuda(v1, u1, u0, u1, u2, c0, c1, c2, c3, c4);
+v2 = forall_ix_snippet_cuda(v2, u2, u0, u1, u2, c0, c1, c2, c3, c4);
+u0 = forall_ix_snippet_cuda(u0, v0, u0, u1, u2, c0, c1, c2, c3, c4);
+u1 = forall_ix_snippet_cuda(u1, v1, u0, u1, u2, c0, c1, c2, c3, c4);
+u2 = forall_ix_snippet_cuda(u2, v2, u0, u1, u2, c0, c1, c2, c3, c4);
 }
 };
 
