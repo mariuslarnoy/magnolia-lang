@@ -272,8 +272,6 @@ __global__ void ix_snippet_global(array_ops::Array res, const array_ops::Array u
 template < typename _Array, typename _Axis, typename _Float, typename _Index,
   typename _Nat, typename _Offset>
   struct forall_ops {
-
-
     typedef _Array Array;
     typedef _Axis Axis;
     typedef _Float Float;
@@ -293,9 +291,7 @@ __device__ inline Array forall_ix_snippet_cuda(const Array & u,
                       const Float & c4) {
 	Array res;
         ix_snippet_global<<<BLOCK_SIZE,THREAD_SIZE>>>(res, u, v, u0, u1, u2, c0, c1, c2, c3, c4);
-  cudaDeviceSynchronize();
 	return res;
-  
 }
 
 inline __device__ void step( Array & v0, Array & v1, Array & v2, 
@@ -312,7 +308,6 @@ Float c1 = ArrayOps.div(ArrayOps.div(one_f, dx), dx);
 Float c2 = ArrayOps.div(ArrayOps.div(_2, dx), dx);
 Float c3 = nu;
 Float c4 = ArrayOps.div(dt, _2);
-printf("hihi\n");
 v0 = forall_ix_snippet_cuda(v0, u0, u0, u1, u2, c0, c1, c2, c3, c4);
 v1 = forall_ix_snippet_cuda(v1, u1, u0, u1, u2, c0, c1, c2, c3, c4);
 v2 = forall_ix_snippet_cuda(v2, u2, u0, u1, u2, c0, c1, c2, c3, c4);

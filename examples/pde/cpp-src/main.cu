@@ -25,10 +25,9 @@ __global__ void global_step(Array &v0, Array &v1, Array &v2,
                             Array &u0, Array &u1, Array &u2,
                             Float s_nu, Float s_dx, Float s_dt) {
 	if(threadIdx.x == 0) {
-	  
+	
     ForallOps forall_ops;
 	  for (int i = 0; i < steps; ++i) {
-  	 
 	    v0 = u0;
 	    v1 = u1;
 	    v2 = u2;
