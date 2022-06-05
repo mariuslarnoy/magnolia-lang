@@ -1,7 +1,7 @@
 #include <vector>
 #include <stdio.h>
 #include <iostream>
-#include "gen/examples/pde/mg-src/pde-cpp.cuh"
+//#include "gen/examples/pde/mg-src/pde-cpp.cuh"
 #include "base.cuh"
 
 //typedef array_ops::Shape Shape;
@@ -20,11 +20,9 @@ static const size_t steps = 10;
   typedef array_ops::Nat Nat;
   typedef array_ops::Offset Offset;
 
-
-template<class _PDEProgram>
 __global__ void global_step(Array &v0, Array &v1, Array &v2,
                             Array &u0, Array &u1, Array &u2,
-                            Float s_nu, Float s_dx, Float s_dt, _PDEProgram pde) {
+                            Float s_nu, Float s_dx, Float s_dt) {
 	if(threadIdx.x == 0) {
 	  
 	  for (int i = 0; i < steps; ++i) {
@@ -33,7 +31,7 @@ __global__ void global_step(Array &v0, Array &v1, Array &v2,
 	    v1 = u1;
 	    v2 = u2;
 	    printf("%f %f %f \n", u0[0], u1[0], u2[0]);
-	    pde.step(v0,v1,v2,u0,u1,u2,s_nu,s_dx,s_dt);
+	    forall_ops.step(v0,v1,v2,u0,u1,u2,s_nu,s_dx,s_dt);
 	  }
 	}
 }
@@ -49,7 +47,6 @@ int main(void) {
   typedef array_ops::Nat Nat;
   typedef array_ops::Offset Offset;
   */
-  examples::pde::mg_src::pde_cpp::PDEProgram pde = examples::pde::mg_src::pde_cpp::PDEProgram();
 
     size_t side = SIDE; //256;
     size_t array_size = side*side*side;
@@ -122,7 +119,7 @@ int main(void) {
     cudaMemcpy(&(u2_dev->content), &u2_dev_content, sizeof(u2_dev->content), cudaMemcpyHostToDevice);
       
     // Launch parent kernel
-    global_step<<<1,1>>>(*v0_dev,*v1_dev,*v2_dev,*u0_dev,*u1_dev,*u2_dev,s_nu,s_dx,s_dt, pde);
+    global_step<<<1,1>>>(*v0_dev,*v1_dev,*v2_dev,*u0_dev,*u1_dev,*u2_dev,s_nu,s_dx,s_dt);
     cudaDeviceSynchronize();
 
 

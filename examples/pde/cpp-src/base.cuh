@@ -271,7 +271,7 @@ template < typename _Array, typename _Axis, typename _Float, typename _Index,
 
     _snippet_ix snippet_ix;
 
-    __device__ inline Array forall_ix_snippet_cuda(const Array & u,
+__device__ inline Array forall_ix_snippet_cuda(const Array & u,
       const Array & v,
         const Array & u0,
           const Array & u1,
@@ -287,24 +287,61 @@ template < typename _Array, typename _Axis, typename _Float, typename _Index,
 	return res;
     }
 
-    __host__ __device__ inline Array forall_ix_snippet(const Array & u,
-      const Array & v,
-        const Array & u0,
-          const Array & u1,
-            const Array & u2,
-              const Float & c0,
-                const Float & c1,
-                  const Float & c2,
-                    const Float & c3,
-                      const Float & c4) {
-      Array result;
-      //printf("in forall_ix_snippet\n");
-      for (size_t i = 0; i < SIDE * SIDE * SIDE; ++i) {
-        result[i] = snippet_ix(u, v, u0, u1, u2, c0, c1, c2, c3, c4, i);
-      }
-      
-      return result;
-    }  
-  };
+inline __device__ void step( Array & v0, Array & v1, Array & v2, 
+      Array & u0, Array & u1, Array & u2,
+      const Float & nu,
+      const Float & dx,
+      const Float & dt) {
+
+Float one_f = 1.0;
+Float _2 = 2.0;
+Float c0 = div(div(one_f, _2), dx);
+Float c1 = div(div(one_f, dx), dx);
+Float c2 = div(div(_2, dx), dx);
+Float c3 = nu;
+Float c4 = div(dt, _2);
+snippet(v0, u0, u0, u1, u2, c0, c1, c2, c3, c4);
+snippet(v1, u1, u0, u1, u2, c0, c1, c2, c3, c4);
+snippet(v2, u2, u0, u1, u2, c0, c1, c2, c3, c4);
+snippet(u0, v0, u0, u1, u2, c0, c1, c2, c3, c4);
+snippet(u1, v1, u0, u1, u2, c0, c1, c2, c3, c4);
+snippet(u2, v2, u0, u1, u2, c0, c1, c2, c3, c4);
+}
+
+
+inline __device__ Float snippet_cuda(const Array & u,
+  const Array & v,
+    const Array & u0,
+      const Array & u1,
+        const Array & u2,
+          const Float & c0,
+            const Float & c1,
+              const Float & c2,
+                const Float & c3,
+                  const Float & c4,
+                    const Index & ix) {
+  Axis zero_ax = 0;
+  Offset one_of = 0;
+  Axis two_ax = 2;
+
+  Float result = binary_add(psi(ix, u),
+   mul(c4,binary_sub(mul(c3,
+     binary_sub(mul(c1,
+     binary_add(binary_add
+        (binary_add(binary_add
+            (binary_add(psi
+                (rotate_ix(ix, zero_ax, 
+                    unary_sub(one_of)), v),
+                    psi(rotate_ix(ix, 
+                    zero_ax, one_of), v)), psi
+                    (rotate_ix(ix, 
+                    one < Axis > (), 
+                    unary_sub(one_of)), v)),
+                    psi(rotate_ix
+                    (ix, one < Axis > (), one_of), v)),
+                    psi(rotate_ix(ix, two_ax, unary_sub(one_of)), v)), psi(rotate_ix(ix, two_ax, one_of), v))), mul(mul(three(), c2), psi(ix, u0)))), mul(c0, binary_add(binary_add(mul(binary_sub(psi(rotate_ix(ix, zero_ax, one_of), v), psi(rotate_ix(ix, zero_ax, unary_sub(one_of)), v)), psi(ix, u0)), mul(binary_sub(psi(rotate_ix(ix, one < Axis > (), one_of), v), psi(rotate_ix(ix, one < Axis > (), unary_sub(one_of)), v)), psi(ix, u1))), mul(binary_sub(psi(rotate_ix(ix, two_ax, one_of), v), psi(rotate_ix(ix, two_ax, unary_sub(one_of)), v)), psi(ix, u2)))))));
+  return result;
+}
+};
 
 
