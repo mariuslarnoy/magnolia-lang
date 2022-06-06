@@ -9,7 +9,7 @@
 static const double s_dt = 0.00082212448155679772495;
 static const double s_nu = 1.0;
 static const double s_dx = 1.0;
-static const size_t steps = 10;
+static const size_t steps = 50;
 
   typedef array_ops ArrayOps;
 
@@ -83,7 +83,6 @@ int main(void) {
       global_step<<<1,1>>>(u0_dev,u1_dev,u2_dev,s_nu,s_dx,s_dt);
       cudaDeviceSynchronize();
  	
-      
       // Copy back to CPU
       Float *u0_test_content;
       u0_test_content = new Float[array_size];
@@ -93,7 +92,7 @@ int main(void) {
       Array test = Array();
       memcpy(test.content, u0_test_content, sizeof(*u0_test_content)*array_size);
       
-      std::cout << "test[0]: " << test[0] << std::endl;
+      std::cout << "test[0]: " << test.content[0] << std::endl;
       cudaDeviceReset();
     } 
 
