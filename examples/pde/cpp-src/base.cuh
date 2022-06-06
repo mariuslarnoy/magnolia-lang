@@ -294,13 +294,16 @@ __device__ inline Array forall_ix_snippet_cuda(const Array & u,
 	return res;
 }
 
-inline __device__ void step( Array & v0, Array & v1, Array & v2, 
-      Array & u0, Array & u1, Array & u2,
-      const Float & nu,
-      const Float & dx,
-      const Float & dt) {
+inline __device__ void step(Array & u0, Array & u1, Array & u2,
+      			    const Float & nu,
+      			    const Float & dx,
+      			    const Float & dt) {
 
+	
 array_ops ArrayOps;
+Array v0 = u0;
+Array v1 = u1;
+Array v2 = u2;
 Float one_f = 1.0;
 Float _2 = 2.0;
 Float c0 = ArrayOps.div(ArrayOps.div(one_f, _2), dx);
@@ -314,6 +317,7 @@ v2 = forall_ix_snippet_cuda(v2, u2, u0, u1, u2, c0, c1, c2, c3, c4);
 u0 = forall_ix_snippet_cuda(u0, v0, u0, u1, u2, c0, c1, c2, c3, c4);
 u1 = forall_ix_snippet_cuda(u1, v1, u0, u1, u2, c0, c1, c2, c3, c4);
 u2 = forall_ix_snippet_cuda(u2, v2, u0, u1, u2, c0, c1, c2, c3, c4);
+
 }
 };
 
