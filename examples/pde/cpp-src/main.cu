@@ -83,15 +83,18 @@ int main(void) {
       global_step<<<1,1>>>(u0_dev,u1_dev,u2_dev,s_nu,s_dx,s_dt);
       cudaDeviceSynchronize();
  	
-
+      
       // Copy back to CPU
-      cudaMemcpy(u0_host_content, u0_dev_content, sizeof(*u0_host_content), cudaMemcpyDeviceToHost);
-      cudaMemcpy(u1_host_content, u1_dev_content, sizeof(*u1_host_content), cudaMemcpyDeviceToHost);
-      cudaMemcpy(u2_host_content, u2_dev_content, sizeof(*u2_host_content), cudaMemcpyDeviceToHost);      
+      Float *u0_test_content;
+      u0_test_content = new Float[array_size];
 
+      cudaMemcpy(u0_test_content, u0_dev_content, sizeof(*u0_test_content), cudaMemcpyDeviceToHost);
+
+      Array test = Array();
+      memcpy(test.content, u0_test_content, sizeof(*u0_test_content)*array_size);
+      
+      std::cout << "test[0]: " << test[0] << std::endl;
       cudaDeviceReset();
-      memcpy(u0.content, u0_host_content, sizeof(*u0_host_content)*array_size);
-      std::cout << "u0[0]: " << u0[0] << std::endl; 
     } 
 
 
