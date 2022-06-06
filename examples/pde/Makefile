@@ -12,7 +12,7 @@ DIM32 := -DSIZE=32 -DBLOCK_SIZE=64 -DTHREAD_SIZE=512
 
 CC := nvcc 
 
-CCFLAGS := -I$(CPP_SOURCE_DIR) -arch=sm_61 -std=c++17 -rdc=true -g -lcudadevrt -lineinfo
+CCFLAGS := -I$(CPP_SOURCE_DIR) -arch=sm_80 -std=c++17 -rdc=true -g -lcudadevrt -lineinfo
 #clang: --cuda-gpu-arch=sm_80 -Lcm/shared/apps/cuda11.6/lib64 -lcudart_static -ldl -lrt -pthread -std=c++17
 #nvcc : -arch=sm_80 -std=c++17 -rdc=true -g -lcudadevrt
 #-g -mtune=native -march=native -O3 -std=c++17 -I$(CPP_SOURCE_DIR) -fopenmp
