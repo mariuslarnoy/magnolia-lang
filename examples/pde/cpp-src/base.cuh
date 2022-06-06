@@ -279,11 +279,11 @@ template < typename _Array, typename _Axis, typename _Float, typename _Index,
     typedef _Nat Nat;
     typedef _Offset Offset;
 
-__device__ inline Array forall_ix_snippet_cuda(const Array & u,
-      const Array & v,
-        const Array & u0,
-          const Array & u1,
-            const Array & u2,
+__device__ inline Array forall_ix_snippet_cuda(const Array &u,
+      const Array &v,
+        const Array &u0,
+          const Array &u1,
+            const Array &u2,
               const Float & c0,
                 const Float & c1,
                   const Float & c2,

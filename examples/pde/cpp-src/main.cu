@@ -58,7 +58,7 @@ int main(void) {
 
     // Allocate device side helper structs
     Array *u0_dev, *u1_dev, *u2_dev;
-	
+
     for (auto i = 0; i < steps; ++i) {
 	
       cudaMalloc((void**)&u0_dev_content, sizeof(Float) * SIDE * SIDE * SIDE);
@@ -82,17 +82,10 @@ int main(void) {
       // Launch parent kernel
       global_step<<<1,1>>>(u0_dev,u1_dev,u2_dev,s_nu,s_dx,s_dt);
       cudaDeviceSynchronize();
- 	
+            
       // Copy back to CPU
-      Float *u0_test_content;
-      u0_test_content = new Float[array_size];
-
-      cudaMemcpy(u0_test_content, u0_dev_content, sizeof(*u0_test_content), cudaMemcpyDeviceToHost);
-
-      Array test = Array();
-      memcpy(test.content, u0_test_content, sizeof(*u0_test_content)*array_size);
-      
-      std::cout << "test[0]: " << test.content[0] << std::endl;
+      cudaMemcpy(u0_host_content, u0_dev_content, sizeof(*u0_host_content), cudaMemcpyDeviceToHost);
+      std::cout << "u0: " << u0_host_content[0] << std::endl;
       cudaDeviceReset();
     } 
 
