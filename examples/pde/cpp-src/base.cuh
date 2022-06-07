@@ -294,7 +294,7 @@ __device__ inline Array forall_ix_snippet_cuda(const Array &u,
 	return res;
 }
 
-inline __device__ void step(Array & u0, Array & u1, Array & u2,
+inline __device__ void step(Array &u0, Array &u1, Array &u2,
       			    const Float & nu,
       			    const Float & dx,
       			    const Float & dt) {
