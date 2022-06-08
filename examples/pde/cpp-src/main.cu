@@ -7,7 +7,7 @@
 static const double s_dt = 0.00082212448155679772495;
 static const double s_nu = 1.0;
 static const double s_dx = 1.0;
-static const size_t steps = 10;
+static const size_t steps = 50;
 
   typedef array_ops ArrayOps;
 
@@ -17,9 +17,6 @@ static const size_t steps = 10;
   typedef array_ops::Float Float;
   typedef array_ops::Nat Nat;
   typedef array_ops::Offset Offset;
-
-  typedef forall_ops<Array, Axis, Float, Index, Nat, Offset> ForallOps;
-
 
 __global__ void ix_snippet_global(array_ops::Array *u, const array_ops::Array *v, const array_ops::Array *u0, const array_ops::Array *u1, const array_ops::Array *u2,
   const array_ops::Float c0,
@@ -99,7 +96,7 @@ void copyDeviceMemory(Float* &u0_host_content,
 }
 
 int main(void) {
-    
+   
     array_ops ArrayOps;
 
     Float c0 = ArrayOps.div(ArrayOps.div(1.0, 2.0), s_dx);
@@ -170,10 +167,11 @@ int main(void) {
       ix_snippet_global<<<block_shape,thread_shape>>>(u1_dev, v1_dev, u0_dev, u1_dev, u2_dev, c0, c1, c2, c3, c4);
       ix_snippet_global<<<block_shape,thread_shape>>>(u2_dev, v2_dev, u0_dev, u1_dev, u2_dev, c0, c1, c2, c3, c4);
                    
-      cudaMemcpy(u0_host_content, u0_dev_content, sizeof(Float) * array_size, cudaMemcpyDeviceToHost);
-      std::cout << "u0: " << u0_host_content[0] << std::endl;
+    //  cudaMemcpy(u0_host_content, u0_dev_content, sizeof(Float) * array_size, cudaMemcpyDeviceToHost);
+    //  std::cout << "u0: " << u0_host_content[0] << std::endl;
     
     } 
+
     cudaMemGetInfo(&mf,&ma);
     std::cout << "free: " << mf << " total: " << ma << std::endl;
 
