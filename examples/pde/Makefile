@@ -7,15 +7,15 @@ CPP_SOURCE_DIR := cpp-src
 CPP_SOURCES := $(shell find $(CPP_SOURCE_DIR) -name "*.cu")
 
 DIM512 := -DSIZE=512 -DBLOCK_SIZE=65536 -DTHREAD_SIZE=2048
-DIM256 := -DSIZE=256 -DBLOCK_SIZE=8192 -DTHREAD_SIZE=2048
-DIM128 := -DSIZE=128 -DBLOCK_SIZE=1024 -DTHREAD_SIZE=2048
+DIM256 := -DSIZE=256 -DBLOCK_SIZE=16384 -DTHREAD_SIZE=1024
+DIM128 := -DSIZE=128 -DBLOCK_SIZE=2048 -DTHREAD_SIZE=1024
 DIM96 := -DSIZE=96 -DBLOCK_SIZE=864 -DTHREAD_SIZE=1024
 DIM64 := -DSIZE=64 -DBLOCK_SIZE=256 -DTHREAD_SIZE=1024
 DIM32 := -DSIZE=32 -DBLOCK_SIZE=64 -DTHREAD_SIZE=512
 
 CC := nvcc 
 
-CCFLAGS := -I$(CPP_SOURCE_DIR) -arch=sm_61 -std=c++17 -rdc=true -g -lcudadevrt -lineinfo
+CCFLAGS := -I$(CPP_SOURCE_DIR) -arch=sm_80 -std=c++17 -rdc=true -g -lcudadevrt -lineinfo
 #clang: --cuda-gpu-arch=sm_80 -Lcm/shared/apps/cuda11.6/lib64 -lcudart_static -ldl -lrt -pthread -std=c++17
 #nvcc : -arch=sm_80 -std=c++17 -rdc=true -g -lcudadevrt
 #-g -mtune=native -march=native -O3 -std=c++17 -I$(CPP_SOURCE_DIR) -fopenmp
