@@ -20,15 +20,8 @@ static const size_t steps = 10;
 
   typedef forall_ops<Array, Axis, Float, Index, Nat, Offset> ForallOps;
 
-  __global__ void global_step(Array *u0, Array *u1, Array *u2,
-                            Float s_nu, Float s_dx, Float s_dt) {
-	if(threadIdx.x == 0) {
-          ForallOps forall_ops;
-	  forall_ops.step(*u0,*u1,*u2,s_nu,s_dx,s_dt);
-	}
-}
 
-__global__ void ix_snippet_global(array_ops::Array res, const array_ops::Array u, const array_ops::Array v, const array_ops::Array u0, const array_ops::Array u1, const array_ops::Array u2,
+__global__ void ix_snippet_global(array_ops::Array *u, const array_ops::Array *v, const array_ops::Array *u0, const array_ops::Array *u1, const array_ops::Array *u2,
   const array_ops::Float c0,
     const array_ops::Float c1,
       const array_ops::Float c2,
@@ -36,43 +29,71 @@ __global__ void ix_snippet_global(array_ops::Array res, const array_ops::Array u
           const array_ops::Float c4) {
   int i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i < SIDE*SIDE*SIDE) {
-    res[i] = snippet_cuda(u, v, u0, u1, u2, c0, c1, c2, c3, c4, i);
+    u->content[i] = snippet_cuda(*u, *v, *u0, *u1, *u2, c0, c1, c2, c3, c4, i);
   }
+  
 }
 
 void allocateDeviceMemory(Float* &u0_host_content, 
                           Float* &u1_host_content,    
                           Float* &u2_host_content,
 		                      Float* &u0_dev_content, 
-                          Float* &u1_dev_content, Float* &u2_dev_content,
-		          Array* &u0_dev, Array* &u1_dev, Array* &u2_dev) {
+                          Float* &u1_dev_content, 
+                          Float* &u2_dev_content,
+                          Float* &v0_host_content,
+                          Float* &v1_host_content,
+                          Float* &v2_host_content,
+                          Float* &v0_dev_content,
+                          Float* &v1_dev_content,
+                          Float* &v2_dev_content,
+		                      Array* &u0_dev, Array* &u1_dev, Array* &u2_dev,
+                          Array* &v0_dev, Array* &v1_dev, Array* &v2_dev) {
 
       cudaMalloc((void**)&u0_dev_content, sizeof(Float) * SIDE * SIDE * SIDE);
       cudaMalloc((void**)&u1_dev_content, sizeof(Float) * SIDE * SIDE * SIDE);
       cudaMalloc((void**)&u2_dev_content, sizeof(Float) * SIDE * SIDE * SIDE);
+      cudaMalloc((void**)&v0_dev_content, sizeof(Float) * SIDE * SIDE * SIDE);
+      cudaMalloc((void**)&v1_dev_content, sizeof(Float) * SIDE * SIDE * SIDE);
+      cudaMalloc((void**)&v2_dev_content, sizeof(Float) * SIDE * SIDE * SIDE);
 
       cudaMalloc((void**)&u0_dev, sizeof(*u0_dev));
       cudaMalloc((void**)&u1_dev, sizeof(*u1_dev));
       cudaMalloc((void**)&u2_dev, sizeof(*u2_dev));
+      cudaMalloc((void**)&v0_dev, sizeof(*v0_dev));
+      cudaMalloc((void**)&v1_dev, sizeof(*v1_dev));
+      cudaMalloc((void**)&v2_dev, sizeof(*v2_dev));
 
 }
 
 void copyDeviceMemory(Float* &u0_host_content, 
                       Float* &u1_host_content,    
                       Float* &u2_host_content,
-                          Float* &u0_dev_content, 
-                      Float* &u1_dev_content, Float* &u2_dev_content,
-              Array* &u0_dev, Array* &u1_dev, Array* &u2_dev) {
+                      Float* &u0_dev_content, 
+                      Float* &u1_dev_content, 
+                      Float* &u2_dev_content,
+                      Float* &v0_host_content,
+                      Float* &v1_host_content,
+                      Float* &v2_host_content,
+                      Float* &v0_dev_content,
+                      Float* &v1_dev_content,
+                      Float* &v2_dev_content,
+                      Array* &u0_dev, Array* &u1_dev, Array* &u2_dev,
+                      Array* &v0_dev, Array* &v1_dev, Array* &v2_dev) {
 
       cudaMemcpy(u0_dev_content, u0_host_content, sizeof(Float) * SIDE * SIDE * SIDE, cudaMemcpyHostToDevice);
       cudaMemcpy(u1_dev_content, u1_host_content, sizeof(Float) * SIDE * SIDE * SIDE, cudaMemcpyHostToDevice);
       cudaMemcpy(u2_dev_content, u2_host_content, sizeof(Float) * SIDE * SIDE * SIDE, cudaMemcpyHostToDevice);
+      cudaMemcpy(v0_dev_content, v0_host_content, sizeof(Float) * SIDE * SIDE * SIDE, cudaMemcpyHostToDevice);
+      cudaMemcpy(v1_dev_content, v1_host_content, sizeof(Float) * SIDE * SIDE * SIDE, cudaMemcpyHostToDevice);
+      cudaMemcpy(v2_dev_content, v2_host_content, sizeof(Float) * SIDE * SIDE * SIDE, cudaMemcpyHostToDevice);
 
       // Binding pointers with _dev
       cudaMemcpy(&(u0_dev->content), &u0_dev_content, sizeof(u0_dev->content), cudaMemcpyHostToDevice);
       cudaMemcpy(&(u1_dev->content), &u1_dev_content, sizeof(u1_dev->content), cudaMemcpyHostToDevice);
       cudaMemcpy(&(u2_dev->content), &u2_dev_content, sizeof(u2_dev->content), cudaMemcpyHostToDevice);
-
+      cudaMemcpy(&(v0_dev->content), &v0_dev_content, sizeof(v0_dev->content), cudaMemcpyHostToDevice);
+      cudaMemcpy(&(v1_dev->content), &v1_dev_content, sizeof(v1_dev->content), cudaMemcpyHostToDevice);
+      cudaMemcpy(&(v2_dev->content), &v2_dev_content, sizeof(v2_dev->content), cudaMemcpyHostToDevice);
 }
 
 int main(void) {
@@ -101,25 +122,51 @@ int main(void) {
     
     // Allocate host data 
     Float *u0_host_content, *u1_host_content, *u2_host_content;
+    Float *v0_host_content, *v1_host_content, *v2_host_content;
+
     u0_host_content = u0.content;
     u1_host_content = u1.content;
     u2_host_content = u2.content;
+    v0_host_content = u0_host_content;
+    v1_host_content = u1_host_content;
+    v2_host_content = u2_host_content;
     
     // Allocate device data
     Float *u0_dev_content, *u1_dev_content, *u2_dev_content;
+    Float *v0_dev_content, *v1_dev_content, *v2_dev_content;
 
     // Allocate device side helper structs
     Array *u0_dev, *u1_dev, *u2_dev;
+    Array *v0_dev, *v1_dev, *v2_dev;
+    
+    allocateDeviceMemory(u0_host_content, u1_host_content, u2_host_content,
+                         u0_dev_content, u1_dev_content, u2_dev_content,
+                         v0_host_content, v1_host_content, v2_host_content,
+                         v0_dev_content, v1_dev_content, v2_dev_content,    
+                         u0_dev, u1_dev, u2_dev,
+                         v0_dev, v1_dev, v2_dev);
 
+    copyDeviceMemory(u0_host_content, u1_host_content, u2_host_content,
+                     u0_dev_content, u1_dev_content, u2_dev_content,
+                     v0_host_content, v1_host_content, v2_host_content,
+                     v0_dev_content, v1_dev_content, v2_dev_content,
+                     u0_dev, u1_dev, u2_dev,
+                     v0_dev, v1_dev, v2_dev);
+
+    // STEP
     for (auto i = 0; i < steps; ++i) {
 
-      allocateDeviceMemory(u0_host_content, u1_host_content, u2_host_content,
-		           u0_dev_content, u1_dev_content, u2_dev_content,
-			   u0_dev, u1_dev, u2_dev);
-
-    } 
-
+      ix_snippet_global<<<BLOCK_SIZE,THREAD_SIZE>>>(v0_dev, u0_dev, u0_dev, u1_dev, u2_dev, c0, c1, c2, c3, c4);
+      ix_snippet_global<<<BLOCK_SIZE,THREAD_SIZE>>>(v1_dev, u1_dev, u0_dev, u1_dev, u2_dev, c0, c1, c2, c3, c4);
+      ix_snippet_global<<<BLOCK_SIZE,THREAD_SIZE>>>(v2_dev, u2_dev, u0_dev, u1_dev, u2_dev, c0, c1, c2, c3, c4);
+      ix_snippet_global<<<BLOCK_SIZE,THREAD_SIZE>>>(u0_dev, v0_dev, u0_dev, u1_dev, u2_dev, c0, c1, c2, c3, c4);
+      ix_snippet_global<<<BLOCK_SIZE,THREAD_SIZE>>>(u1_dev, v1_dev, u0_dev, u1_dev, u2_dev, c0, c1, c2, c3, c4);
+      ix_snippet_global<<<BLOCK_SIZE,THREAD_SIZE>>>(u2_dev, v2_dev, u0_dev, u1_dev, u2_dev, c0, c1, c2, c3, c4);
+                   
+      cudaMemcpy(u0_host_content, u0_dev_content, sizeof(Float) * array_size, cudaMemcpyDeviceToHost);
+      std::cout << "u0: " << u0_host_content[0] << std::endl;
     
+    } 
     cudaMemGetInfo(&mf,&ma);
     std::cout << "free: " << mf << " total: " << ma << std::endl;
 
