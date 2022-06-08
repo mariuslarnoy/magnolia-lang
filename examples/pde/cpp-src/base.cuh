@@ -256,7 +256,7 @@ array_ops ArrayOps;
                     ArrayOps.psi(ArrayOps.rotate_ix(ix, two_ax, ArrayOps.unary_sub(one_of)), v)), ArrayOps.psi(ArrayOps.rotate_ix(ix, two_ax, one_of), v))), ArrayOps.mul(ArrayOps.mul(3, c2), ArrayOps.psi(ix, u0)))), ArrayOps.mul(c0, ArrayOps.binary_add(ArrayOps.binary_add(ArrayOps.mul(ArrayOps.binary_sub(ArrayOps.psi(ArrayOps.rotate_ix(ix, zero_ax, one_of), v), ArrayOps.psi(ArrayOps.rotate_ix(ix, zero_ax, ArrayOps.unary_sub(one_of)), v)), ArrayOps.psi(ix, u0)), ArrayOps.mul(ArrayOps.binary_sub(ArrayOps.psi(ArrayOps.rotate_ix(ix, one_ax, one_of), v), ArrayOps.psi(ArrayOps.rotate_ix(ix, one_ax, ArrayOps.unary_sub(one_of)), v)), ArrayOps.psi(ix, u1))), ArrayOps.mul(ArrayOps.binary_sub(ArrayOps.psi(ArrayOps.rotate_ix(ix, two_ax, one_of), v), ArrayOps.psi(ArrayOps.rotate_ix(ix, two_ax, ArrayOps.unary_sub(one_of)), v)), ArrayOps.psi(ix, u2)))))));
   return result;
 }
-
+/*
 __global__ void ix_snippet_global(array_ops::Array res, const array_ops::Array u, const array_ops::Array v, const array_ops::Array u0, const array_ops::Array u1, const array_ops::Array u2,
     const array_ops::Float c0,
       const array_ops::Float c1,
@@ -268,7 +268,7 @@ __global__ void ix_snippet_global(array_ops::Array res, const array_ops::Array u
 	    res[i] = snippet_cuda(u, v, u0, u1, u2, c0, c1, c2, c3, c4, i);
     }
 }
-
+*/
 template < typename _Array, typename _Axis, typename _Float, typename _Index,
   typename _Nat, typename _Offset>
   struct forall_ops {
