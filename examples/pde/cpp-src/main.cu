@@ -1,5 +1,6 @@
 #include <vector>
 #include <stdio.h>
+#include <iomanip>
 #include <iostream>
 //#include "gen/examples/pde/mg-src/pde-cpp.cuh"
 #include "base.cuh"
@@ -111,7 +112,8 @@ int main(void) {
     
     size_t mf, ma;
     cudaMemGetInfo(&mf,&ma);
-    std::cout << "free: " << mf << " total: " << ma << std::endl;
+
+    std::cout << "Before launch - free memory: " << mf/1000000000 << "GB, total: " << ma/1000000000 << "GB" << std::endl;
   
 
     //kernel dims
@@ -156,7 +158,13 @@ int main(void) {
                      v0_dev_content, v1_dev_content, v2_dev_content,
                      u0_dev, u1_dev, u2_dev,
                      v0_dev, v1_dev, v2_dev);
-
+    
+    // performance timing
+    float time;
+    cudaEvent_t start, stop;
+    cudaEventCreate(&start);
+    cudaEventCreate(&stop);
+    cudaEventRecord(start, 0);
     // STEP
     for (auto i = 0; i < steps; ++i) {
 
@@ -170,11 +178,17 @@ int main(void) {
     //  cudaMemcpy(u0_host_content, u0_dev_content, sizeof(Float) * array_size, cudaMemcpyDeviceToHost);
     //  std::cout << "u0: " << u0_host_content[0] << std::endl;
     
-    } 
+    }
+    // Performance recording
+    cudaEventRecord(stop, 0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&time, start, stop);
+    std::cout << "Elapsed time: " << time << "ms, ";
+    std::cout << std::setprecision(3);
+    std::cout << time/1000 << "s" << std::endl; 
 
     cudaMemGetInfo(&mf,&ma);
-    std::cout << "free: " << mf << " total: " << ma << std::endl;
-
+    std::cout << "After launch - free memory: " << mf/1000000000 << "GB, total: " << ma/1000000000 << "GB" << std::endl;
     cudaDeviceReset();
     exit(0);
 }
