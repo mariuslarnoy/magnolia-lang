@@ -27,7 +27,9 @@ __global__ void ix_snippet_global(array_ops::Array *u, const array_ops::Array *v
       const array_ops::Float c2,
         const array_ops::Float c3,
           const array_ops::Float c4) {
-  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  int x = blockIdx.x * blockDim.x + threadIdx.x;
+  int y = blockIdx.y * blockDim.y + threadIdx.x;
+  int i = y*SIDE+x;
   if (i < SIDE*SIDE*SIDE) {
     u->content[i] = snippet_cuda(*u, *v, *u0, *u1, *u2, c0, c1, c2, c3, c4, i);
   }
@@ -114,6 +116,11 @@ int main(void) {
     cudaMemGetInfo(&mf,&ma);
     std::cout << "free: " << mf << " total: " << ma << std::endl;
   
+
+    //kernel dims
+    dim3 block_shape = dim3(BLOCK_SIZE, BLOCK_DIM);
+    dim3 thread_shape = dim3(THREAD_SIZE);
+
     Array u0, u1, u2;
     
     dumpsine(u0);
@@ -156,12 +163,12 @@ int main(void) {
     // STEP
     for (auto i = 0; i < steps; ++i) {
 
-      ix_snippet_global<<<BLOCK_SIZE,THREAD_SIZE>>>(v0_dev, u0_dev, u0_dev, u1_dev, u2_dev, c0, c1, c2, c3, c4);
-      ix_snippet_global<<<BLOCK_SIZE,THREAD_SIZE>>>(v1_dev, u1_dev, u0_dev, u1_dev, u2_dev, c0, c1, c2, c3, c4);
-      ix_snippet_global<<<BLOCK_SIZE,THREAD_SIZE>>>(v2_dev, u2_dev, u0_dev, u1_dev, u2_dev, c0, c1, c2, c3, c4);
-      ix_snippet_global<<<BLOCK_SIZE,THREAD_SIZE>>>(u0_dev, v0_dev, u0_dev, u1_dev, u2_dev, c0, c1, c2, c3, c4);
-      ix_snippet_global<<<BLOCK_SIZE,THREAD_SIZE>>>(u1_dev, v1_dev, u0_dev, u1_dev, u2_dev, c0, c1, c2, c3, c4);
-      ix_snippet_global<<<BLOCK_SIZE,THREAD_SIZE>>>(u2_dev, v2_dev, u0_dev, u1_dev, u2_dev, c0, c1, c2, c3, c4);
+      ix_snippet_global<<<block_shape,thread_shape>>>(v0_dev, u0_dev, u0_dev, u1_dev, u2_dev, c0, c1, c2, c3, c4);
+      ix_snippet_global<<<block_shape,thread_shape>>>(v1_dev, u1_dev, u0_dev, u1_dev, u2_dev, c0, c1, c2, c3, c4);
+      ix_snippet_global<<<block_shape,thread_shape>>>(v2_dev, u2_dev, u0_dev, u1_dev, u2_dev, c0, c1, c2, c3, c4);
+      ix_snippet_global<<<block_shape,thread_shape>>>(u0_dev, v0_dev, u0_dev, u1_dev, u2_dev, c0, c1, c2, c3, c4);
+      ix_snippet_global<<<block_shape,thread_shape>>>(u1_dev, v1_dev, u0_dev, u1_dev, u2_dev, c0, c1, c2, c3, c4);
+      ix_snippet_global<<<block_shape,thread_shape>>>(u2_dev, v2_dev, u0_dev, u1_dev, u2_dev, c0, c1, c2, c3, c4);
                    
       cudaMemcpy(u0_host_content, u0_dev_content, sizeof(Float) * array_size, cudaMemcpyDeviceToHost);
       std::cout << "u0: " << u0_host_content[0] << std::endl;
