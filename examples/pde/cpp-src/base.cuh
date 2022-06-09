@@ -14,7 +14,8 @@
 
 //#include <omp.h>
 
-#define SIDE SIZE 
+#define SIDE SIZE
+ 
 #define NTILES 4
 #define NB_CORES 2
 

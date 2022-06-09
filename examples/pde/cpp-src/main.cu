@@ -19,19 +19,22 @@ static const size_t steps = 50;
   typedef array_ops::Nat Nat;
   typedef array_ops::Offset Offset;
 
-__global__ void ix_snippet_global(array_ops::Array *u, const array_ops::Array *v, const array_ops::Array *u0, const array_ops::Array *u1, const array_ops::Array *u2,
-  const array_ops::Float c0,
-    const array_ops::Float c1,
-      const array_ops::Float c2,
-        const array_ops::Float c3,
-          const array_ops::Float c4) {
+__global__ void ix_snippet_global(array_ops::Array *u, 
+                            const array_ops::Array *v, 
+                            const array_ops::Array *u0, 
+                            const array_ops::Array *u1, 
+                            const array_ops::Array *u2,
+                            const array_ops::Float c0,
+                            const array_ops::Float c1,
+                            const array_ops::Float c2,
+                            const array_ops::Float c3,
+                            const array_ops::Float c4) {
   int x = blockIdx.x * blockDim.x + threadIdx.x;
   int y = blockIdx.y * blockDim.y + threadIdx.x;
   int i = y*SIDE+x;
   if (i < SIDE*SIDE*SIDE) {
     u->content[i] = snippet_cuda(*u, *v, *u0, *u1, *u2, c0, c1, c2, c3, c4, i);
   }
-  
 }
 
 void allocateDeviceMemory(Float* &u0_host_content, 
@@ -106,9 +109,7 @@ int main(void) {
     Float c3 = s_nu;
     Float c4 = ArrayOps.div(s_dt, 2.0);
 
-    size_t side = SIDE; //256;
-    size_t array_size = side*side*side;
-    std::cout << "Dims: " << side << "*" << side << "*" << side << ", steps: " << steps << std::endl;
+    std::cout << "Dims: " << SIDE << "*" << SIDE << "*" << SIDE << ", steps: " << steps << std::endl;
     
     size_t mf, ma;
     cudaMemGetInfo(&mf,&ma);
