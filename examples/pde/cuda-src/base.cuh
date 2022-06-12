@@ -271,13 +271,11 @@ struct array_ops {
 
 // CUDA kernel
 template <class _substepIx>
-__global__ void substep_ix_global(array_ops<float>::Array *res,const array_ops<float>::Array *u, const array_ops<float>::Array *v, const array_ops<float>::Array *u0, const array_ops<float>::Array *u1, const array_ops<float>::Array *u2) {
+__global__ void substep_ix_global(array_ops<float>::Array *res,const array_ops<float>::Array *u, const array_ops<float>::Array *v, const array_ops<float>::Array *u0, const array_ops<float>::Array *u1, const array_ops<float>::Array *u2, _substepIx substepIx) {
 
   int x = blockIdx.x * blockDim.x + threadIdx.x;
   int y = blockIdx.y * blockDim.y + threadIdx.x;
   int i = y*S0+x;
-  
-  _substepIx substepIx;
 
   if (i < TOTAL_PADDED_SIZE) {
     res[i] = substepIx(u,v,u0,u1,u2,i);
@@ -328,7 +326,7 @@ struct forall_ops {
     
     dim3 block_shape = dim3(65336, 2);
 
-    substep_ix_global<_substepIx><<<block_shape, 1024>>>(res_dev, u_dev, v_dev, u0_dev, u1_dev, u2_dev);
+    substep_ix_global<<<block_shape, 1024>>>(res_dev, u_dev, v_dev, u0_dev, u1_dev, u2_dev, substepIx);
 
     cudaMemcpy(result.content, res_dev_content, sizeof(Float) * TOTAL_PADDED_SIZE, cudaMemcpyDeviceToHost);
 
@@ -517,8 +515,8 @@ template<typename _Index>
 struct scalar_index {
   typedef _Index Index;
 
-  struct ScalarIndex { size_t value; 
-                       ScalarIndex(size_t &i) {this->value = i;}};
+  struct ScalarIndex { size_t value;
+                       ScalarIndex(size_t i) {this->value = i;}};
 
   __host__ __device__ inline Index mkIx(const ScalarIndex &i, const ScalarIndex &j,
                        const ScalarIndex &k) {
@@ -544,7 +542,7 @@ struct axis_length {
   typedef _ScalarIndex ScalarIndex;
 
   struct AxisLength { size_t value; 
-                      AxisLength(size_t &i) {this->value = i;}};
+                      AxisLength(size_t i) {this->value = i;}};
 
   __host__ __device__ inline AxisLength shape0() { return AxisLength(PADDED_S0); }
   __host__ __device__ inline AxisLength shape1() { return AxisLength(PADDED_S1); }
