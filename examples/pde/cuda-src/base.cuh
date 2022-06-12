@@ -303,6 +303,10 @@ struct forall_ops {
 
     Float *res_dev_content, *u_dev_content, *v_dev_content,
           *u0_dev_content, *u1_dev_content, *u2_dev_content;
+
+    // As discussed, we allocate memory here.
+    // Downside is that this is expensive, and we ideally would want to do this
+    // once. 
     cudaMalloc((void**)&res_dev_content, sizeof(Float) * TOTAL_PADDED_SIZE);
     cudaMalloc((void**)&u_dev_content, sizeof(Float) * TOTAL_PADDED_SIZE);
     cudaMalloc((void**)&v_dev_content, sizeof(Float) * TOTAL_PADDED_SIZE);
@@ -433,7 +437,7 @@ struct forall_ops {
       }
     }
 
-    throw "failed at rotating index";
+    //throw "failed at rotating index";
     //std::unreachable();
     return 0;
   }

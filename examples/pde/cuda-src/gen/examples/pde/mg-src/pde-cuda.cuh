@@ -1656,8 +1656,7 @@ private:
     };
 public:
     typedef array_ops<PDEProgramPadded::Float>::Array Array;
-private:
-    forall_ops<PDEProgramPadded::Array, PDEProgramPadded::Axis, PDEProgramPadded::Float, PDEProgramPadded::Index, PDEProgramPadded::Nat, PDEProgramPadded::Offset> __forall_ops;
+
 public:
     struct _binary_add {
     private:
@@ -1730,16 +1729,7 @@ public:
     };
 
     PDEProgramPadded::_psi psi;
-    struct _refillPadding {
-    private:
-        forall_ops<PDEProgramPadded::Array, PDEProgramPadded::Axis, PDEProgramPadded::Float, PDEProgramPadded::Index, PDEProgramPadded::Nat, PDEProgramPadded::Offset> __forall_ops;
-    public:
-        __device__ __host__ inline void operator()(PDEProgramPadded::Array& a) {
-            return __forall_ops.refillPadding(a);
-        };
-    };
 
-    PDEProgramPadded::_refillPadding refillPadding;
     struct _rotate {
     private:
         array_ops<PDEProgramPadded::Float> __array_ops;
@@ -1752,7 +1742,7 @@ public:
     PDEProgramPadded::_rotate rotate;
     struct _rotateIxPadded {
     private:
-        forall_ops<PDEProgramPadded::Array, PDEProgramPadded::Axis, PDEProgramPadded::Float, PDEProgramPadded::Index, PDEProgramPadded::Nat, PDEProgramPadded::Offset> __forall_ops;
+        forall_ops<PDEProgramPadded::Array, PDEProgramPadded::Axis, PDEProgramPadded::Float, PDEProgramPadded::Index, PDEProgramPadded::Nat, PDEProgramPadded::Offset, PDEProgramPadded::_substepIx> __forall_ops;
     public:
         __device__ __host__ inline PDEProgramPadded::Index operator()(const PDEProgramPadded::Index& ix, const PDEProgramPadded::Axis& axis, const PDEProgramPadded::Offset& offset) {
             return __forall_ops.rotateIxPadded(ix, axis, offset);
@@ -1803,7 +1793,16 @@ public:
             return binary_add(psi(ix, u), mul(div(dt(), two.operator()<Float>()), binary_sub(mul(nu(), binary_sub(mul(div(div(one.operator()<Float>(), dx()), dx()), binary_add(binary_add(binary_add(binary_add(binary_add(psi(rotateIxPadded(ix, zero(), unary_sub(one.operator()<Offset>())), v), psi(rotateIxPadded(ix, zero(), one.operator()<Offset>()), v)), psi(rotateIxPadded(ix, one.operator()<Axis>(), unary_sub(one.operator()<Offset>())), v)), psi(rotateIxPadded(ix, one.operator()<Axis>(), one.operator()<Offset>()), v)), psi(rotateIxPadded(ix, two.operator()<Axis>(), unary_sub(one.operator()<Offset>())), v)), psi(rotateIxPadded(ix, two.operator()<Axis>(), one.operator()<Offset>()), v))), mul(div(div(mul(three(), two.operator()<Float>()), dx()), dx()), psi(ix, u0)))), mul(div(div(one.operator()<Float>(), two.operator()<Float>()), dx()), binary_add(binary_add(mul(binary_sub(psi(rotateIxPadded(ix, zero(), one.operator()<Offset>()), v), psi(rotateIxPadded(ix, zero(), unary_sub(one.operator()<Offset>())), v)), psi(ix, u0)), mul(binary_sub(psi(rotateIxPadded(ix, one.operator()<Axis>(), one.operator()<Offset>()), v), psi(rotateIxPadded(ix, one.operator()<Axis>(), unary_sub(one.operator()<Offset>())), v)), psi(ix, u1))), mul(binary_sub(psi(rotateIxPadded(ix, two.operator()<Axis>(), one.operator()<Offset>()), v), psi(rotateIxPadded(ix, two.operator()<Axis>(), unary_sub(one.operator()<Offset>())), v)), psi(ix, u2)))))));
         };
     };
+    struct _refillPadding {
+    private:
+        forall_ops<PDEProgramPadded::Array, PDEProgramPadded::Axis, PDEProgramPadded::Float, PDEProgramPadded::Index, PDEProgramPadded::Nat, PDEProgramPadded::Offset, PDEProgramPadded::_substepIx> __forall_ops;
+    public:
+        __device__ __host__ inline void operator()(PDEProgramPadded::Array& a) {
+            return __forall_ops.refillPadding(a);
+        };
+    };
 
+    PDEProgramPadded::_refillPadding refillPadding;
 private:
     forall_ops<PDEProgramPadded::Array, PDEProgramPadded::Axis, PDEProgramPadded::Float, PDEProgramPadded::Index, PDEProgramPadded::Nat, PDEProgramPadded::Offset, PDEProgramPadded::_substepIx> __forall_ops0;
     padded_schedule<PDEProgramPadded::Array, PDEProgramPadded::Float, PDEProgramPadded::Index, PDEProgramPadded::_substepIx> __padded_schedule;
@@ -1868,6 +1867,9 @@ public:
             }();
         };
     };
+
+private:
+    forall_ops<PDEProgramPadded::Array, PDEProgramPadded::Axis, PDEProgramPadded::Float, PDEProgramPadded::Index, PDEProgramPadded::Nat, PDEProgramPadded::Offset, PDEProgramPadded::_substepIx> __forall_ops;
 
     PDEProgramPadded::_step step;
     PDEProgramPadded::_schedulePadded schedulePadded;
