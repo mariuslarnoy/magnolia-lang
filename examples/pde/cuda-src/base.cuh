@@ -269,6 +269,22 @@ struct array_ops {
   __host__ __device__ inline Offset unary_sub(const Offset &offset) { return Offset(-offset.value); }
 };
 
+// CUDA kernel
+template <typename _Array, typename _Axis, typename _Float, typename _Index,
+          typename _Nat, typename _Offset, class _substepIx>
+__global__ void substep_ix_global(array_ops::Array *res,array_ops::Array *u, 
+                                  array_ops::Array *v, array_ops::Array *u0, array_ops::Array *u1, array_ops::Array *u2) {
+  int x = blockIdx.x * blockDim.x + threadIdx.x;
+  int y = blockIdx.y * blockDim.y + threadIdx.x;
+  int i = y*SIDE+x;
+  
+  _substepIx substepIx;
+
+  if (i < TOTAL_PADDED_SIZE) {
+    res[i] = substepIx(u,v,u0,u1,u2,i);
+  }
+}
+
 template <typename _Array, typename _Axis, typename _Float, typename _Index,
           typename _Nat, typename _Offset, class _substepIx>
 struct forall_ops {
@@ -283,16 +299,39 @@ struct forall_ops {
 
   inline Nat nbCores() { return Nat(NB_CORES); }
 
-  inline Array schedule(const Array &u, const Array &v,
+  __host__ __device__ inline Array schedule(const Array &u, const Array &v,
       const Array &u0, const Array &u1, const Array &u2) {
+    
     Array result;
-    std::cout << "in schedule" << std::endl;
-    for (size_t i = 0; i < TOTAL_PADDED_SIZE; ++i) {
-      result[i] = substepIx(u, v, u0, u1, u2, i);
-    }
 
-    //std::cout << "produced: " << result[PAD0 * PADDED_S1 * PADDED_S2 + PAD1 * PADDED_S2 + PAD2] << std::endl;
+    Float *res_dev_content, *u_dev_content, *v_dev_content,
+          *u0_dev_content, *u1_dev_content, *u2_dev_content;
+    cudaMalloc((void**)&res_dev_content, sizeof(Float) * TOTAL_PADDED_SIZE);
+    cudaMalloc((void**)&u_dev_content, sizeof(Float) * TOTAL_PADDED_SIZE);
+    cudaMalloc((void**)&v_dev_content, sizeof(Float) * TOTAL_PADDED_SIZE);
+    cudaMalloc((void**)&u0_dev_content, sizeof(Float) * TOTAL_PADDED_SIZE);
+    cudaMalloc((void**)&u1_dev_content, sizeof(Float) * TOTAL_PADDED_SIZE);
+    cudaMalloc((void**)&u2_dev_content, sizeof(Float) * TOTAL_PADDED_SIZE);
+    
+    cudaMemcpy(res_dev_content, res, sizeof(Float) * TOTAL_PADDED_SIZE, cudaMemcpyHostToDevice);
+    cudaMemcpy(u_dev_content, u.content, sizeof(Float) * TOTAL_PADDED_SIZE, cudaMemcpyHostToDevice);
+    cudaMemcpy(v_dev_content, v.content, sizeof(Float) * TOTAL_PADDED_SIZE, cudaMemcpyHostToDevice);
+    cudaMemcpy(u0_dev_content, u0.content, sizeof(Float) * TOTAL_PADDED_SIZE, cudaMemcpyHostToDevice);
+    cudaMemcpy(u1_dev_content, u1.content, sizeof(Float) * TOTAL_PADDED_SIZE, cudaMemcpyHostToDevice);
+    cudaMemcpy(u2_dev_content, u2.content, sizeof(Float) * TOTAL_PADDED_SIZE, cudaMemcpyHostToDevice);
 
+    Array *res_dev, *u_dev, *v_dev, *u0_dev, *u1_dev, *u2_dev;
+    cudaMemcpy(&(u_dev->content), &u_dev_content, sizeof(u_dev->content), cudaMemcpyHostToDevice);
+    cudaMemcpy(&(v_dev->content), &v_dev_content, sizeof(v_dev->content), cudaMemcpyHostToDevice);
+    cudaMemcpy(&(u0_dev->content), &u0_dev_content, sizeof(u0_dev->content), cudaMemcpyHostToDevice);
+    cudaMemcpy(&(u1_dev->content), &u1_dev_content, sizeof(u1_dev->content), cudaMemcpyHostToDevice);
+    cudaMemcpy(&(u2_dev->content), &u2_dev_content, sizeof(u2_dev->content), cudaMemcpyHostToDevice);
+    
+    dim3 block_shape = dim3(65336, 2);
+
+    substep_ix_global<<<block_shape, 1024>>>(res_dev, u_dev, v_dev, u0_dev, u1_dev, u2_dev);
+
+    cudaMemcpy(result.content, res_dev_content, sizeof(Float) * TOTAL_PADDED_SIZE, cudaMemcpyDeviceToHost);
     return result;
   }
 
