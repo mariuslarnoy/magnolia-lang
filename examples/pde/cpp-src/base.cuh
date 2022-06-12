@@ -29,9 +29,9 @@
 
 struct constants {
     typedef float Float;
-    constexpr Float nu() { return S_NU; }
-    constexpr Float dt() { return S_DT; }
-    constexpr Float dx() { return S_DX; }
+    __host__ __device__ constexpr Float nu() { return S_NU; }
+    __host__ __device__ constexpr Float dt() { return S_DT; }
+    __host__ __device__ constexpr Float dx() { return S_DX; }
 };
 
 template <typename _Float>
@@ -43,9 +43,9 @@ struct array_ops {
   struct Nat { size_t value; };
 
   struct Array {
-    std::unique_ptr<Float[]> content;
-    Array() {
-      this->content = std::unique_ptr<Float[]>(new Float[TOTAL_PADDED_SIZE]);
+    Float * content;
+    __host__ __device__ Array() {
+      this -> content = new Float[TOTAL_PADDED_SIZE];
     }
 
     Array(const Array &other) {
@@ -70,17 +70,17 @@ struct array_ops {
         return *this;
     }
 
-    inline Float operator[](const Index &ix) const {
-      return this->content[ix];
+    __host__ __device__ inline Float operator[](const Index & ix) const {
+      return this -> content[ix];
     }
 
-    inline Float &operator[](const Index &ix) {
-      return this->content[ix];
+    __host__ __device__ inline Float & operator[](const Index & ix) {
+      return this -> content[ix];
     }
 
     /* OF Pad extension */
     void replenish_padding() {
-      Float *raw_content = this->content.get();
+      Float *raw_content = this->content;
 
       double begin = omp_get_wtime();
       // Axis 2
@@ -131,49 +131,64 @@ struct array_ops {
     }
   };
 
-  inline Float psi(const Index &ix, const Array &array) { return array[ix]; }
+  __host__ __device__ inline Float psi(const Index & ix,
+    const Array & array) {
+    return array[ix];
+  }
 
   /* Float ops */
-  inline Float unary_sub(const Float &f) { return -f; }
-  inline Float binary_add(const Float &lhs, const Float &rhs) {
+  __host__ __device__ inline Float unary_sub(const Float & f) {
+    return -f;
+  }
+  __host__ __device__ inline Float binary_add(const Float & lhs,
+    const Float & rhs) {
     return lhs + rhs;
   }
-  inline Float binary_sub(const Float &lhs, const Float &rhs) {
+  __host__ __device__ inline Float binary_sub(const Float & lhs,
+    const Float & rhs) {
     return lhs - rhs;
   }
-  inline Float mul(const Float &lhs, const Float &rhs) {
+  __host__ __device__ inline Float mul(const Float & lhs,
+    const Float & rhs) {
     return lhs * rhs;
   }
-  inline Float div(const Float &num, const Float &den) {
+  __host__ __device__ inline Float div(const Float & num,
+    const Float & den) {
     return num / den;
   }
-  inline Float one_float() { return 1; }
-  inline Float two_float() { return 2; }
-  inline Float three_float() { return 3; }
+  __host__ __device__ inline Float one_float() {
+    return 1;
+  }
+  __host__ __device__ inline Float two_float() {
+    return 2;
+  }
+  __host__ __device__ inline Float three_float() {
+    return 3;
+  }
 
   /* Scalar-Array ops */
-  inline Array binary_add(const Float &lhs, const Array &rhs) {
+  __host__ __device__ inline Array binary_add(const Float &lhs, const Array &rhs) {
     Array out;
     for (size_t i = 0; i < TOTAL_PADDED_SIZE; ++i) {
       out[i] = lhs + rhs[i];
     }
     return out;
   }
-  inline Array binary_sub(const Float &lhs, const Array &rhs) {
+  __host__ __device__ inline Array binary_sub(const Float &lhs, const Array &rhs) {
     Array out;
     for (size_t i = 0; i < TOTAL_PADDED_SIZE; ++i) {
       out[i] = lhs - rhs[i];
     }
     return out;
   }
-  inline Array mul(const Float &lhs, const Array &rhs) {
+  __host__ __device__ inline Array mul(const Float &lhs, const Array &rhs) {
     Array out;
     for (size_t i = 0; i < TOTAL_PADDED_SIZE; ++i) {
       out[i] = lhs * rhs[i];
     }
     return out;
   }
-  inline Array div(const Float &lhs, const Array &rhs) {
+  __host__ __device__ inline Array div(const Float &lhs, const Array &rhs) {
     Array out;
     for (size_t i = 0; i < TOTAL_PADDED_SIZE; ++i) {
       out[i] = lhs / rhs[i];
@@ -182,28 +197,28 @@ struct array_ops {
   }
 
   /* Array-Array ops */
-  inline Array binary_add(const Array &lhs, const Array &rhs) {
+  __host__ __device__ inline Array binary_add(const Array &lhs, const Array &rhs) {
     Array out;
     for (size_t i = 0; i < TOTAL_PADDED_SIZE; ++i) {
       out[i] = lhs[i] + rhs[i];
     }
     return out;
   }
-  inline Array binary_sub(const Array &lhs, const Array &rhs) {
+  __host__ __device__ inline Array binary_sub(const Array &lhs, const Array &rhs) {
     Array out;
     for (size_t i = 0; i < TOTAL_PADDED_SIZE; ++i) {
       out[i] = lhs[i] - rhs[i];
     }
     return out;
   }
-  inline Array mul(const Array &lhs, const Array &rhs) {
+  __host__ __device__ inline Array mul(const Array &lhs, const Array &rhs) {
     Array out;
     for (size_t i = 0; i < TOTAL_PADDED_SIZE; ++i) {
       out[i] = lhs[i] * rhs[i];
     }
     return out;
   }
-  inline Array div(const Array &lhs, const Array &rhs) {
+  __host__ __device__ inline Array div(const Array &lhs, const Array &rhs) {
     Array out;
     for (size_t i = 0; i < TOTAL_PADDED_SIZE; ++i) {
       out[i] = lhs[i] / rhs[i];
@@ -211,7 +226,7 @@ struct array_ops {
     return out;
   }
 
-  inline Array rotate(const Array &array, const Axis &axis, const Offset &o) {
+  __host__ __device__ inline Array rotate(const Array &array, const Axis &axis, const Offset &o) {
     Array result;
 
     for (size_t i = 0; i < TOTAL_PADDED_SIZE; ++i) {
@@ -224,7 +239,7 @@ struct array_ops {
     //std::unreachable(); // Always optimize with DNF, do not rotate
   }
 
-  inline Index rotateIx(const Index &ix,
+  __host__ __device__ inline Index rotateIx(const Index &ix,
                          const Axis &axis,
                          const Offset &offset) {
     if (axis.value == 0) {
@@ -245,12 +260,12 @@ struct array_ops {
     return 0;
   }
 
-  inline Axis zero_axis() { return Axis(0); }
-  inline Axis one_axis() { return Axis(1); }
-  inline Axis two_axis() { return Axis(2); }
+  __host__ __device__ inline Axis zero_axis() { return Axis(0); }
+  __host__ __device__ inline Axis one_axis() { return Axis(1); }
+  __host__ __device__ inline Axis two_axis() { return Axis(2); }
 
-  inline Offset one_offset() { return Offset(1); }
-  inline Offset unary_sub(const Offset &offset) { return Offset(-offset.value); }
+  __host__ __device__ inline Offset one_offset() { return Offset(1); }
+  __host__ __device__ inline Offset unary_sub(const Offset &offset) { return Offset(-offset.value); }
 };
 
 template <typename _Array, typename _Axis, typename _Float, typename _Index,
