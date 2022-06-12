@@ -88,7 +88,7 @@ build-example-cpp-%: examples/% build
 build-example-cuda-%: examples/% build
 	$(eval example-name := $(notdir $<))
 	$(mgn) build --output-directory $</cuda-src/gen --backend cuda --base-import-directory gen --allow-overwrite $</mg-src/$(example-name)-cuda.mg
-	make cuda -C $<
+	make -C $<
 
 build-example-py-%: examples/% build
 	$(eval example-name := $(notdir $<))

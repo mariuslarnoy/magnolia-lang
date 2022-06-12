@@ -3,8 +3,8 @@ TARGET := $(shell basename `pwd`).bin
 .PHONY: all clean setup
 
 BIN_DIR := bin
-CPP_SOURCE_DIR := cpp-src
-CPP_SOURCES := $(shell find $(CPP_SOURCE_DIR) -name "*.cu")
+CU_SOURCE_DIR := cuda-src
+CU_SOURCES := $(shell find $(CU_SOURCE_DIR) -name "*.cu")
 DEFINES := -DPAD0=0 -DPAD1=0 -DPAD2=0
 
 MKDIR := @mkdir
@@ -19,40 +19,40 @@ DIM32 := -DSIZE=32 -DBLOCK_SIZE=64 -DBLOCK_DIM=1 -DTHREAD_SIZE=512
 
 CC := nvcc 
 
-CCFLAGS := -I$(CPP_SOURCE_DIR) -arch=sm_61 -std=c++17 -rdc=true -g -lcudadevrt -lineinfo
+CCFLAGS := -I$(CU_SOURCE_DIR) -arch=sm_61 -std=c++17 -rdc=true -g -lcudadevrt -lineinfo
 
 MKDIR := @mkdir
 RM := @rm
 
 d32: setup
-	$(CC) $(CCFLAGS) $(DEFINES) $(DIM32) $(CPP_SOURCES) -o $(BIN_DIR)/$(TARGET)
+	$(CC) $(CCFLAGS) $(DEFINES) $(DIM32) $(CU_SOURCES) -o $(BIN_DIR)/$(TARGET)
 	@echo $(TARGET)
-	@echo $(CPP_SOURCES)
+	@echo $(CU_SOURCES)
 
 d64: setup
-	$(CC) $(CCFLAGS) $(DEFINES) $(DIM64) $(CPP_SOURCES) -o $(BIN_DIR)/$(TARGET)
+	$(CC) $(CCFLAGS) $(DEFINES) $(DIM64) $(CU_SOURCES) -o $(BIN_DIR)/$(TARGET)
 	@echo $(TARGET)
-	@echo $(CPP_SOURCES)
+	@echo $(CU_SOURCES)
 
 d128: setup
-	$(CC) $(CCFLAGS) $(DEFINES) $(DIM128) $(CPP_SOURCES) -o $(BIN_DIR)/$(TARGET)
+	$(CC) $(CCFLAGS) $(DEFINES) $(DIM128) $(CU_SOURCES) -o $(BIN_DIR)/$(TARGET)
 	@echo $(TARGET)
-	@echo $(CPP_SOURCES)
+	@echo $(CU_SOURCES)
 
 d256: setup
-	$(CC) $(CCFLAGS) $(DEFINES) $(DIM256) $(CPP_SOURCES) -o $(BIN_DIR)/$(TARGET)
+	$(CC) $(CCFLAGS) $(DEFINES) $(DIM256) $(CU_SOURCES) -o $(BIN_DIR)/$(TARGET)
 	@echo $(TARGET)
-	@echo $(CPP_SOURCES)
+	@echo $(CU_SOURCES)
 
 d512: setup
-	$(CC) $(CCFLAGS) $(DEFINES) $(DIM512) $(CPP_SOURCES) -o $(BIN_DIR)/$(TARGET)
+	$(CC) $(CCFLAGS) $(DEFINES) $(DIM512) $(CU_SOURCES) -o $(BIN_DIR)/$(TARGET)
 	@echo $(TARGET)
-	@echo $(CPP_SOURCES)
+	@echo $(CU_SOURCES)
 
 all: setup
-	$(CC) $(CCFLAGS) $(DEFINES) $(CPP_SOURCES) -o $(BIN_DIR)/$(TARGET)
+	$(CC) $(CCFLAGS) $(DEFINES) $(CU_SOURCES) -o $(BIN_DIR)/$(TARGET)
 	@echo $(TARGET)
-	@echo $(CPP_SOURCES)
+	@echo $(CU_SOURCES)
 
 setup:
 	$(MKDIR) -p $(BIN_DIR)
