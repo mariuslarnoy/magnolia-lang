@@ -278,7 +278,7 @@ __global__ void substep_ix_global(array_ops<float>::Array *res,const array_ops<f
   int i = y*S0+x;
 
   if (i < TOTAL_PADDED_SIZE) {
-    res[i] = substepIx(u,v,u0,u1,u2,i);
+    res->content[i] = substepIx(*u,*v,*u0,*u1,*u2,i);
   }
 }
 
