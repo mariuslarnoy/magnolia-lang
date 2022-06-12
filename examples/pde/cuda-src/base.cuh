@@ -348,7 +348,7 @@ struct forall_ops {
     return result;
   }
 
-  inline Array schedule_tiled(const Array &u, const Array &v,
+  __host__ __device__ inline Array schedule_tiled(const Array &u, const Array &v,
       const Array &u0, const Array &u1, const Array &u2) {
     Array result;
 
@@ -372,7 +372,7 @@ struct forall_ops {
   }
 
   /* OF Pad extension */
-  inline Array schedulePadded(const Array &u, const Array &v,
+  __host__ __device__ inline Array schedulePadded(const Array &u, const Array &v,
       const Array &u0, const Array &u1, const Array &u2) {
     Array result;
     std::cout << "in schedulePadded" << std::endl;
@@ -400,11 +400,11 @@ struct forall_ops {
   //   return result;
   // }
 
-  inline void refillPadding(Array& arr) {
+  __host__ __device__ inline void refillPadding(Array& arr) {
     arr.replenish_padding();
   }
 
-  inline Index rotateIxPadded(const Index &ix,
+  __host__ __device__ inline Index rotateIxPadded(const Index &ix,
                                 const Axis &axis,
                                 const Offset &offset) {
     if (axis.value == 0) {
@@ -444,7 +444,7 @@ struct forall_ops {
 
   struct ScalarIndex { size_t value; };
 
-  inline Index mkIx(const ScalarIndex &i, const ScalarIndex &j,
+  __host__ __device__ inline Index mkIx(const ScalarIndex &i, const ScalarIndex &j,
                        const ScalarIndex &k) {
     return i.value * PADDED_S1 * PADDED_S2 + j.value * PADDED_S2 + k.value;
   }
@@ -453,32 +453,32 @@ struct forall_ops {
 
   struct AxisLength { size_t value; };
 
-  inline ScalarIndex binary_add(const ScalarIndex &six, const Offset &offset) {
+  __host__ __device__ inline ScalarIndex binary_add(const ScalarIndex &six, const Offset &offset) {
     return ScalarIndex(six.value + offset.value);
   }
 
-  inline ScalarIndex mod(const ScalarIndex &six, const AxisLength &sc) {
+  __host__ __device__ inline ScalarIndex mod(const ScalarIndex &six, const AxisLength &sc) {
     return ScalarIndex(six.value % sc.value);
   }
 
-  inline AxisLength shape0() { return AxisLength(PADDED_S0); }
-  inline AxisLength shape1() { return AxisLength(PADDED_S1); }
-  inline AxisLength shape2() { return AxisLength(PADDED_S2); }
+  __host__ __device__ inline AxisLength shape0() { return AxisLength(PADDED_S0); }
+  __host__ __device__ inline AxisLength shape1() { return AxisLength(PADDED_S1); }
+  __host__ __device__ inline AxisLength shape2() { return AxisLength(PADDED_S2); }
 
-  inline ScalarIndex ix_0(const Index &ix) {
+  __host__ __device__ inline ScalarIndex ix_0(const Index &ix) {
     return ScalarIndex(ix / (PADDED_S1 * PADDED_S2));
   }
 
-  inline ScalarIndex ix_1(const Index &ix) {
+  __host__ __device__ inline ScalarIndex ix_1(const Index &ix) {
     return ScalarIndex((ix % PADDED_S1 * PADDED_S2) / PADDED_S2);
   }
 
-  inline ScalarIndex ix_2(const Index &ix) {
+  __host__ __device__ inline ScalarIndex ix_2(const Index &ix) {
     return ScalarIndex(ix % PADDED_S2);
   }
 };
 
-inline void dumpsine(array_ops<float>::Array &result) {
+__host__ __device__ inline void dumpsine(array_ops<float>::Array &result) {
   double step = 0.01;
   double PI = 3.14159265358979323846;
   double amplitude = 10.0;
@@ -517,59 +517,65 @@ template<typename _Index>
 struct scalar_index {
   typedef _Index Index;
 
-  struct ScalarIndex { size_t value; };
+  struct ScalarIndex { size_t value; 
+                       ScalarIndex(size_t &i) {this->value = i;}};
 
-  inline Index mkIx(const ScalarIndex &i, const ScalarIndex &j,
+  __host__ __device__ inline Index mkIx(const ScalarIndex &i, const ScalarIndex &j,
                        const ScalarIndex &k) {
     return i.value * PADDED_S1 * PADDED_S2 + j.value * PADDED_S2 + k.value;
   }
-  inline ScalarIndex ix0(const Index &ix) {
+  __host__ __device__ inline ScalarIndex ix0(const array_ops<float>::Index &ix) {
     return ScalarIndex(ix / (PADDED_S1 * PADDED_S2));
   }
 
-  inline ScalarIndex ix1(const Index &ix) {
+  __host__ __device__ inline ScalarIndex ix1(const array_ops<float>::Index &ix) {
     return ScalarIndex((ix % PADDED_S1 * PADDED_S2) / PADDED_S2);
   }
 
-  inline ScalarIndex ix2(const Index &ix) {
+  __host__ __device__ inline ScalarIndex ix2(const array_ops<float>::Index &ix) {
     return ScalarIndex(ix % PADDED_S2);
   }
 };
 
-template<typename _ScalarIndex, typename _Offset>
+template<typename _Offset, typename _ScalarIndex>
 struct axis_length {
-  typedef _ScalarIndex ScalarIndex;
-  typedef _Offset Offset;
-
-  struct AxisLength { size_t value; };
   
-  inline ScalarIndex binary_add(const ScalarIndex &six, const Offset &offset) {
+  typedef _Offset Offset;
+  typedef _ScalarIndex ScalarIndex;
+
+  struct AxisLength { size_t value; 
+                      AxisLength(size_t &i) {this->value = i;}};
+
+  __host__ __device__ inline AxisLength shape0() { return AxisLength(PADDED_S0); }
+  __host__ __device__ inline AxisLength shape1() { return AxisLength(PADDED_S1); }
+  __host__ __device__ inline AxisLength shape2() { return AxisLength(PADDED_S2); }
+  
+  __host__ __device__ inline ScalarIndex binary_add(const ScalarIndex &six, const Offset &offset) {
     return ScalarIndex(six.value + offset.value);
   }
 
-  inline ScalarIndex mod(const ScalarIndex &six, const AxisLength &sc) {
+  __host__ __device__ inline ScalarIndex mod(const ScalarIndex &six, const AxisLength &sc) {
     return ScalarIndex(six.value % sc.value);
   }
 
-  inline AxisLength shape0() { return AxisLength(PADDED_S0); }
-  inline AxisLength shape1() { return AxisLength(PADDED_S1); }
-  inline AxisLength shape2() { return AxisLength(PADDED_S2); }
+
 };
 
-template<typename _ScalarIndex, typename _Array, typename _Float>
+template< typename _Array, typename _Float, typename _ScalarIndex>
 struct specialize_base {
 
-  typedef _ScalarIndex ScalarIndex;
   typedef _Array Array;
   typedef _Float Float;
+  typedef _ScalarIndex ScalarIndex;
 
-  inline Float psi(const ScalarIndex &i, const ScalarIndex &j,
-                   const ScalarIndex &k, const Array &a) {
+
+  __host__ __device__ inline Float psi(const ScalarIndex &i, 
+    const ScalarIndex &j, const ScalarIndex &k, const Array &a) {
     return a[i.value * PADDED_S1 * PADDED_S2 + j.value * PADDED_S2 + k.value];
     }
 };
 
-template<typename _Array, typename _Index, typename _Float, class _substepIx>
+template<typename _Array, typename _Float, typename _Index, class _substepIx>
 struct padded_schedule {
 
   typedef _Array Array;
@@ -578,7 +584,7 @@ struct padded_schedule {
 
   _substepIx substepIx;
 
-  inline Array schedulePadded(const Array &u, const Array &v,
+  __host__ __device__ inline Array schedulePadded(const Array &u, const Array &v,
                               const Array &u0, const Array &u1, 
                               const Array &u2) {
     Array result;
@@ -610,12 +616,12 @@ struct specialize_psi_ops_2 {
 
   _substepIx3D substepIx3D;
 
-  inline Float psi(const ScalarIndex &i, const ScalarIndex &j,
+  __host__ __device__ inline Float psi(const ScalarIndex &i, const ScalarIndex &j,
                    const ScalarIndex &k, const Array &a) {
     return a[i.value * PADDED_S1 * PADDED_S2 + j.value * PADDED_S2 + k.value];
   }
 
-  inline Array schedule3DPadded(const Array &u, const Array &v,
+  __host__ __device__ inline Array schedule3DPadded(const Array &u, const Array &v,
       const Array &u0, const Array &u1, const Array &u2) {
     Array result;
     std::cout << "in schedule3DPadded" << std::endl;
@@ -632,11 +638,11 @@ struct specialize_psi_ops_2 {
   }
 
   /* ExtNeededFns++ */
-  inline void refillPadding(Array& arr) {
+  __host__ __device__ inline void refillPadding(Array& arr) {
     arr.replenish_padding();
   }
 
-  inline Index rotateIxPadded(const Index &ix,
+  __host__ __device__ inline Index rotateIxPadded(const Index &ix,
                               const Axis &axis,
                               const Offset &offset) {
     if (axis.value == 0) {
@@ -666,8 +672,8 @@ struct specialize_psi_ops_2 {
         return ix_subarray_base * PADDED_S2 + ix_in_subarray;
       }
     }
-
-    throw "failed at rotating index";
+    // device code does not support exception handling
+    //throw "failed at rotating index";
     //std::unreachable();
     return 0;
   }
