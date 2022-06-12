@@ -13,7 +13,8 @@ struct BasePDEProgram {
         template <typename T>
         __device__ __host__ inline T operator()() {
             T o;
-            BasePDEProgram::two0(o);
+            BasePDEProgram two0;
+            two0.two0(o);
             return o;
         };
     };
@@ -23,7 +24,8 @@ struct BasePDEProgram {
         template <typename T>
         __device__ __host__ inline T operator()() {
             T o;
-            BasePDEProgram::one0(o);
+            BasePDEProgram one0;
+            one0.one0(o);
             return o;
         };
     };
@@ -269,7 +271,8 @@ struct PDEProgram3D {
         template <typename T>
         __device__ __host__ inline T operator()() {
             T o;
-            PDEProgram3D::two0(o);
+            PDEProgram3D two0;
+            two0.two0(o);
             return o;
         };
     };
@@ -279,7 +282,8 @@ struct PDEProgram3D {
         template <typename T>
         __device__ __host__ inline T operator()() {
             T o;
-            PDEProgram3D::one0(o);
+            PDEProgram3D one0;
+            one0.one0(o);
             return o;
         };
     };
@@ -719,7 +723,8 @@ struct PDEProgram3DPadded {
         template <typename T>
         __device__ __host__ inline T operator()() {
             T o;
-            PDEProgram3DPadded::two0(o);
+            PDEProgram3DPadded two0;
+            two0.two0(o);
             return o;
         };
     };
@@ -729,7 +734,8 @@ struct PDEProgram3DPadded {
         template <typename T>
         __device__ __host__ inline T operator()() {
             T o;
-            PDEProgram3DPadded::one0(o);
+            PDEProgram3DPadded one0;
+            one0.one0(o);
             return o;
         };
     };
@@ -1190,7 +1196,8 @@ struct PDEProgramDNF {
         template <typename T>
         __device__ __host__ inline T operator()() {
             T o;
-            PDEProgramDNF::two0(o);
+            PDEProgramDNF two0;
+            two0.two0(o);
             return o;
         };
     };
@@ -1200,7 +1207,8 @@ struct PDEProgramDNF {
         template <typename T>
         __device__ __host__ inline T operator()() {
             T o;
-            PDEProgramDNF::one0(o);
+            PDEProgramDNF one0;
+            one0.one0(o);
             return o;
         };
     };
@@ -1482,7 +1490,8 @@ struct PDEProgramPadded {
         template <typename T>
         __device__ __host__ inline T operator()() {
             T o;
-            PDEProgramPadded::two0(o);
+            PDEProgramPadded two0;
+            two0.two0(o);
             return o;
         };
     };
@@ -1492,7 +1501,8 @@ struct PDEProgramPadded {
         template <typename T>
         __device__ __host__ inline T operator()() {
             T o;
-            PDEProgramPadded::one0(o);
+            PDEProgramPadded one0;
+            one0.one0(o);
             return o;
         };
     };

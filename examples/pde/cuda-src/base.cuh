@@ -37,10 +37,10 @@ struct constants {
 template <typename _Float>
 struct array_ops {
   typedef _Float Float;
-  struct Offset { int value; Offset(const int &v) : value(v) {} };
-  struct Axis { size_t value; Axis(const size_t &v) : value(v) {} };
+  struct Offset { int value; Offset(){} Offset(const int &v) : value(v) {} };
+  struct Axis { size_t value; Axis(){} Axis(const size_t &v) : value(v) {} };
   typedef size_t Index;
-  struct Nat { size_t value; Nat(const size_t &v) : value(v) {} };
+  struct Nat { size_t value; Nat(){} Nat(const size_t &v) : value(v) {} };
 
   struct Array {
     Float * content;
