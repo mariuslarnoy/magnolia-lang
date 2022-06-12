@@ -270,13 +270,12 @@ struct array_ops {
 };
 
 // CUDA kernel
-template <typename _Array, typename _Axis, typename _Float, typename _Index,
-          typename _Nat, typename _Offset, class _substepIx>
-__global__ void substep_ix_global(array_ops::Array *res,array_ops::Array *u, 
-                                  array_ops::Array *v, array_ops::Array *u0, array_ops::Array *u1, array_ops::Array *u2) {
+template <class _substepIx>
+__global__ void substep_ix_global(array_ops<float>::Array *res,const array_ops<float>::Array *u, const array_ops<float>::Array *v, const array_ops<float>::Array *u0, const array_ops<float>::Array *u1, const array_ops<float>::Array *u2) {
+
   int x = blockIdx.x * blockDim.x + threadIdx.x;
   int y = blockIdx.y * blockDim.y + threadIdx.x;
-  int i = y*SIDE+x;
+  int i = y*S0+x;
   
   _substepIx substepIx;
 
@@ -313,7 +312,7 @@ struct forall_ops {
     cudaMalloc((void**)&u1_dev_content, sizeof(Float) * TOTAL_PADDED_SIZE);
     cudaMalloc((void**)&u2_dev_content, sizeof(Float) * TOTAL_PADDED_SIZE);
     
-    cudaMemcpy(res_dev_content, res, sizeof(Float) * TOTAL_PADDED_SIZE, cudaMemcpyHostToDevice);
+    cudaMemcpy(res_dev_content, result.content, sizeof(Float) * TOTAL_PADDED_SIZE, cudaMemcpyHostToDevice);
     cudaMemcpy(u_dev_content, u.content, sizeof(Float) * TOTAL_PADDED_SIZE, cudaMemcpyHostToDevice);
     cudaMemcpy(v_dev_content, v.content, sizeof(Float) * TOTAL_PADDED_SIZE, cudaMemcpyHostToDevice);
     cudaMemcpy(u0_dev_content, u0.content, sizeof(Float) * TOTAL_PADDED_SIZE, cudaMemcpyHostToDevice);
@@ -329,9 +328,10 @@ struct forall_ops {
     
     dim3 block_shape = dim3(65336, 2);
 
-    substep_ix_global<<<block_shape, 1024>>>(res_dev, u_dev, v_dev, u0_dev, u1_dev, u2_dev);
+    substep_ix_global<_substepIx><<<block_shape, 1024>>>(res_dev, u_dev, v_dev, u0_dev, u1_dev, u2_dev);
 
     cudaMemcpy(result.content, res_dev_content, sizeof(Float) * TOTAL_PADDED_SIZE, cudaMemcpyDeviceToHost);
+
     return result;
   }
 
@@ -511,7 +511,88 @@ inline void dumpsine(array_ops<float>::Array &result) {
 
 }
 
+// CUDA stuff
 
+template<typename _Index>
+struct scalar_index {
+  typedef _Index Index;
+
+  struct ScalarIndex { size_t value; };
+
+  inline Index mkIx(const ScalarIndex &i, const ScalarIndex &j,
+                       const ScalarIndex &k) {
+    return i.value * PADDED_S1 * PADDED_S2 + j.value * PADDED_S2 + k.value;
+  }
+  inline ScalarIndex ix0(const Index &ix) {
+    return ScalarIndex(ix / (PADDED_S1 * PADDED_S2));
+  }
+
+  inline ScalarIndex ix1(const Index &ix) {
+    return ScalarIndex((ix % PADDED_S1 * PADDED_S2) / PADDED_S2);
+  }
+
+  inline ScalarIndex ix2(const Index &ix) {
+    return ScalarIndex(ix % PADDED_S2);
+  }
+};
+
+template<typename _ScalarIndex, typename _Offset>
+struct axis_length {
+  typedef _ScalarIndex ScalarIndex;
+  typedef _Offset Offset;
+
+  struct AxisLength { size_t value; };
+  
+  inline ScalarIndex binary_add(const ScalarIndex &six, const Offset &offset) {
+    return ScalarIndex(six.value + offset.value);
+  }
+
+  inline ScalarIndex mod(const ScalarIndex &six, const AxisLength &sc) {
+    return ScalarIndex(six.value % sc.value);
+  }
+
+  inline AxisLength shape0() { return AxisLength(PADDED_S0); }
+  inline AxisLength shape1() { return AxisLength(PADDED_S1); }
+  inline AxisLength shape2() { return AxisLength(PADDED_S2); }
+};
+
+template<typename _ScalarIndex, typename _Array, typename _Float>
+struct specialize_base {
+
+  typedef _ScalarIndex ScalarIndex;
+  typedef _Array Array;
+  typedef _Float Float;
+
+  inline Float psi(const ScalarIndex &i, const ScalarIndex &j,
+                   const ScalarIndex &k, const Array &a) {
+    return a[i.value * PADDED_S1 * PADDED_S2 + j.value * PADDED_S2 + k.value];
+    }
+};
+
+template<typename _Array, typename _Index, typename _Float, class _substepIx>
+struct padded_schedule {
+
+  typedef _Array Array;
+  typedef _Index Index;
+  typedef _Float Float;
+
+  _substepIx substepIx;
+
+  inline Array schedulePadded(const Array &u, const Array &v,
+                              const Array &u0, const Array &u1, 
+                              const Array &u2) {
+    Array result;
+    std::cout << "in schedulePadded" << std::endl;
+    for (size_t i = PAD0; i < S0 + PAD0; ++i) {
+      for (size_t j = PAD1; j < S1 + PAD1; ++j) {
+        for (size_t k = PAD2; k < S2 + PAD2; ++k) {
+          size_t ix = i * PADDED_S1 * PADDED_S2 + j * PADDED_S2 + k;
+          result[ix] = substepIx(u, v, u0, u1, u2, ix);
+        }
+      }
+    }
+  }
+};
 
 /* experimental stuff below */
 
@@ -551,33 +632,6 @@ struct specialize_psi_ops_2 {
   }
 
   /* ExtNeededFns++ */
-
-  struct AxisLength { size_t value; };
-
-  inline ScalarIndex binary_add(const ScalarIndex &six, const Offset &offset) {
-    return ScalarIndex(six.value + offset.value);
-  }
-
-  inline ScalarIndex mod(const ScalarIndex &six, const AxisLength &sc) {
-    return ScalarIndex(six.value % sc.value);
-  }
-
-  inline AxisLength shape0() { return AxisLength(PADDED_S0); }
-  inline AxisLength shape1() { return AxisLength(PADDED_S1); }
-  inline AxisLength shape2() { return AxisLength(PADDED_S2); }
-
-  inline ScalarIndex ix0(const Index &ix) {
-    return ScalarIndex(ix / (PADDED_S1 * PADDED_S2));
-  }
-
-  inline ScalarIndex ix1(const Index &ix) {
-    return ScalarIndex((ix % PADDED_S1 * PADDED_S2) / PADDED_S2);
-  }
-
-  inline ScalarIndex ix2(const Index &ix) {
-    return ScalarIndex(ix % PADDED_S2);
-  }
-
   inline void refillPadding(Array& arr) {
     arr.replenish_padding();
   }
