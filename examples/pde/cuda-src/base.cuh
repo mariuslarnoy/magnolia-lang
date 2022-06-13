@@ -48,6 +48,8 @@ struct array_ops {
       this -> content = new Float[TOTAL_PADDED_SIZE];
     }
 
+// TODO: FIX THESE
+/*
     Array(const Array &other) {
       this->content = new Float[TOTAL_PADDED_SIZE];
       memcpy(this->content, other.content,
@@ -59,8 +61,8 @@ struct array_ops {
     }
 
     Array &operator=(const Array &other) {
-      this->content = std::unique_ptr<Float[]>(new Float[TOTAL_PADDED_SIZE]);
-      memcpy(this->content.get(), other.content.get(),
+      this->content = new Float[TOTAL_PADDED_SIZE];
+      memcpy(this->content, other.content,
              TOTAL_PADDED_SIZE * sizeof(Float));
       return *this;
     }
@@ -69,7 +71,7 @@ struct array_ops {
         this->content = std::move(other.content);
         return *this;
     }
-
+*/
     __host__ __device__ inline Float operator[](const Index & ix) const {
       return this -> content[ix];
     }
@@ -79,10 +81,9 @@ struct array_ops {
     }
 
     /* OF Pad extension */
-    void replenish_padding() {
+    __host__ __device__ void replenish_padding() {
       Float *raw_content = this->content;
 
-      double begin = omp_get_wtime();
       // Axis 2
       if (PAD2 > 0) {
         for (size_t i = 0; i < S0; ++i) {
@@ -101,7 +102,6 @@ struct array_ops {
             }
         }
       }
-      double end = omp_get_wtime();
 
       //std::cout << "overhead: " << end - begin << " [s]" << std::endl;
 
@@ -575,6 +575,54 @@ struct specialize_base {
     const ScalarIndex &j, const ScalarIndex &k, const Array &a) {
     return a[i.value * PADDED_S1 * PADDED_S2 + j.value * PADDED_S2 + k.value];
     }
+};
+
+template<typename _Array, typename _Axis, typename _Index, typename _Offset>
+struct padding_extension{
+  typedef _Array Array;
+  typedef _Axis Axis;
+  typedef _Index Index;
+  typedef _Offset Offset;
+
+  __host__ __device__ inline void refillPadding(Array& arr) {
+    arr.replenish_padding();
+  }
+
+  __host__ __device__ inline Index rotateIxPadded(const Index &ix,
+    const Axis &axis,
+    const Offset &offset) {
+if (axis.value == 0) {
+if constexpr(PAD0 >= 1) {
+return ix + (offset.value * PADDED_S1 * PADDED_S2);
+}
+else {
+size_t result = (ix + TOTAL_PADDED_SIZE + (offset.value * PADDED_S1 * PADDED_S2)) % TOTAL_PADDED_SIZE;
+return result;
+}
+} else if (axis.value == 1) {
+if constexpr(PAD1 >= 1) {
+return ix + (offset.value * PADDED_S2);
+}
+else {
+size_t ix_subarray_base = ix / (PADDED_S1 * PADDED_S2);
+size_t ix_in_subarray = (ix + PADDED_S1 * PADDED_S2 + offset.value * PADDED_S2) % (PADDED_S1 * PADDED_S2);
+return ix_subarray_base * (PADDED_S1 * PADDED_S2) + ix_in_subarray;
+}
+} else if (axis.value == 2) {
+if constexpr(PAD2 >= 1) {
+return ix + offset.value;
+}
+else {
+size_t ix_subarray_base = ix / PADDED_S2;
+size_t ix_in_subarray = (ix + PADDED_S2 + offset.value) % PADDED_S2;
+return ix_subarray_base * PADDED_S2 + ix_in_subarray;
+}
+}
+// device code does not support exception handling
+//throw "failed at rotating index";
+//std::unreachable();
+return 0;
+}
 };
 
 template<typename _Array, typename _Float, typename _Index, class _substepIx>

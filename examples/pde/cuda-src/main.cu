@@ -21,7 +21,6 @@ int main() {
 
     BasePDEProgram pde;
     PDEProgramDNF pde_dnf;
-    double begin = omp_get_wtime();
 
     for (size_t i = 0; i < steps; ++i) {
         pde_dnf.step(u0, u1, u2);//, S_NU, S_DX, S_DT);
@@ -29,9 +28,7 @@ int main() {
                   << u1[PAD0 * PADDED_S1 * PADDED_S2 + PAD1 * PADDED_S2 + PAD2] << " "
                   << u2[PAD0 * PADDED_S1 * PADDED_S2 + PAD1 * PADDED_S2 + PAD2] << std::endl;
     }
-
-    double end = omp_get_wtime();
-
+    /*
     std::cout << end - begin << "[s] elapsed with sizes ("
               << S0 << ", "
               << S1 << ", "
@@ -41,4 +38,5 @@ int main() {
               << PAD2 << ") on "
               << NB_CORES << " threads for "
               << steps << " steps" << std::endl;
+              */
 }
