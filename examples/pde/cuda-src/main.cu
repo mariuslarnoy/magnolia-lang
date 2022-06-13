@@ -18,8 +18,6 @@ int main() {
     dumpsine(u1);
     dumpsine(u2);
 
-
-    BasePDEProgram pde;
     PDEProgramDNF pde_dnf;
 
     for (size_t i = 0; i < steps; ++i) {

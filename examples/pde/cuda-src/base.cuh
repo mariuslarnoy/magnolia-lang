@@ -37,10 +37,16 @@ struct constants {
 template <typename _Float>
 struct array_ops {
   typedef _Float Float;
-  struct Offset { int value; Offset(){} Offset(const int &v) : value(v) {} };
-  struct Axis { size_t value; Axis(){} Axis(const size_t &v) : value(v) {} };
+  struct Offset { int value; 
+    __host__ __device__ Offset(){} 
+    __host__ __device__ Offset(const int &v) : value(v) {} };
+  struct Axis { size_t value;
+    __host__ __device__ Axis(){} 
+    __host__ __device__ Axis(const size_t &v) : value(v) {} };
   typedef size_t Index;
-  struct Nat { size_t value; Nat(){} Nat(const size_t &v) : value(v) {} };
+  struct Nat { size_t value; 
+    __host__ __device__ Nat(){} 
+    __host__ __device__ Nat(const size_t &v) : value(v) {} };
 
   struct Array {
     Float * content;
@@ -322,6 +328,7 @@ struct forall_ops {
     cudaMemcpy(u2_dev_content, u2.content, sizeof(Float) * TOTAL_PADDED_SIZE, cudaMemcpyHostToDevice);
 
     Array *res_dev, *u_dev, *v_dev, *u0_dev, *u1_dev, *u2_dev;
+
     cudaMemcpy(&(u_dev->content), &u_dev_content, sizeof(u_dev->content), cudaMemcpyHostToDevice);
     cudaMemcpy(&(v_dev->content), &v_dev_content, sizeof(v_dev->content), cudaMemcpyHostToDevice);
     cudaMemcpy(&(u0_dev->content), &u0_dev_content, sizeof(u0_dev->content), cudaMemcpyHostToDevice);
@@ -520,7 +527,7 @@ struct scalar_index {
   typedef _Index Index;
 
   struct ScalarIndex { size_t value;
-                       ScalarIndex(size_t i) {this->value = i;}};
+    __host__ __device__ ScalarIndex(size_t i) {this->value = i;}};
 
   __host__ __device__ inline Index mkIx(const ScalarIndex &i, const ScalarIndex &j,
                        const ScalarIndex &k) {
@@ -546,7 +553,7 @@ struct axis_length {
   typedef _ScalarIndex ScalarIndex;
 
   struct AxisLength { size_t value; 
-                      AxisLength(size_t i) {this->value = i;}};
+    __host__ __device__ AxisLength(size_t i) {this->value = i;}};
 
   __host__ __device__ inline AxisLength shape0() { return AxisLength(PADDED_S0); }
   __host__ __device__ inline AxisLength shape1() { return AxisLength(PADDED_S1); }
@@ -638,7 +645,7 @@ struct padded_schedule {
                               const Array &u0, const Array &u1, 
                               const Array &u2) {
     Array result;
-    std::cout << "in schedulePadded" << std::endl;
+    printf("in schedulePadded\n");
     for (size_t i = PAD0; i < S0 + PAD0; ++i) {
       for (size_t j = PAD1; j < S1 + PAD1; ++j) {
         for (size_t k = PAD2; k < S2 + PAD2; ++k) {
@@ -674,7 +681,7 @@ struct specialize_psi_ops_2 {
   __host__ __device__ inline Array schedule3DPadded(const Array &u, const Array &v,
       const Array &u0, const Array &u1, const Array &u2) {
     Array result;
-    std::cout << "in schedule3DPadded" << std::endl;
+    printf("in schedule3DPadded\n");
     for (size_t i = PAD0; i < S0 + PAD0; ++i) {
       for (size_t j = PAD1; j < S1 + PAD1; ++j) {
         for (size_t k = PAD2; k < S2 + PAD2; ++k) {
