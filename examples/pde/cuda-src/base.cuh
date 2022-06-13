@@ -65,7 +65,7 @@ struct array_ops {
     Array(Array &&other) {
         this->content = std::move(other.content);
     }
-
+*/
     Array &operator=(const Array &other) {
       this->content = new Float[TOTAL_PADDED_SIZE];
       memcpy(this->content, other.content,
@@ -73,11 +73,11 @@ struct array_ops {
       return *this;
     }
 
-    Array &operator=(Array &&other) {
-        this->content = std::move(other.content);
-        return *this;
-    }
-*/
+    //Array &operator=(Array &&other) {
+    //    this->content = std::move(other.content);
+    //    return *this;
+    //}
+
     __host__ __device__ inline Float operator[](const Index & ix) const {
       return this -> content[ix];
     }
@@ -305,14 +305,12 @@ struct forall_ops {
   __host__ inline Array schedule(const Array &u, const Array &v,
       const Array &u0, const Array &u1, const Array &u2) {
     
+    std::cout << "in schedule" << std::endl;
     Array result = Array();
-
     Float *res_dev_content, *u_dev_content, *v_dev_content,
           *u0_dev_content, *u1_dev_content, *u2_dev_content;
 
-    // As discussed, we allocate memory here.
-    // Downside is that this is expensive, and we ideally would want to do this
-    // once. 
+    // memory allocation, messy
     cudaMalloc((void**)&res_dev_content, sizeof(Float) * TOTAL_PADDED_SIZE);
     cudaMalloc((void**)&u_dev_content, sizeof(Float) * TOTAL_PADDED_SIZE);
     cudaMalloc((void**)&v_dev_content, sizeof(Float) * TOTAL_PADDED_SIZE);
@@ -347,7 +345,6 @@ struct forall_ops {
     substep_ix_global<<<block_shape, 1024>>>(res_dev, u_dev, v_dev, u0_dev, u1_dev, u2_dev, substepIx);
     cudaDeviceSynchronize();
 
-    cudaMemcpy(result.content, res_dev_content, sizeof(Float) * TOTAL_PADDED_SIZE, cudaMemcpyDeviceToHost);
     cudaDeviceReset();
     return result;
 
