@@ -302,10 +302,10 @@ struct forall_ops {
 
   inline Nat nbCores() { return Nat(NB_CORES); }
 
-  __host__ __device__ inline Array schedule(const Array &u, const Array &v,
+  __host__ inline Array schedule(const Array &u, const Array &v,
       const Array &u0, const Array &u1, const Array &u2) {
     
-    Array result;
+    Array result = Array();
 
     Float *res_dev_content, *u_dev_content, *v_dev_content,
           *u0_dev_content, *u1_dev_content, *u2_dev_content;
@@ -329,6 +329,13 @@ struct forall_ops {
 
     Array *res_dev, *u_dev, *v_dev, *u0_dev, *u1_dev, *u2_dev;
 
+    cudaMalloc((void**)&res_dev, sizeof(*res_dev));
+    cudaMalloc((void**)&u_dev, sizeof(*u_dev));
+    cudaMalloc((void**)&v_dev, sizeof(*v_dev));
+    cudaMalloc((void**)&u0_dev, sizeof(*u0_dev));
+    cudaMalloc((void**)&u1_dev, sizeof(*u1_dev));
+    cudaMalloc((void**)&u2_dev, sizeof(*u2_dev));
+
     cudaMemcpy(&(u_dev->content), &u_dev_content, sizeof(u_dev->content), cudaMemcpyHostToDevice);
     cudaMemcpy(&(v_dev->content), &v_dev_content, sizeof(v_dev->content), cudaMemcpyHostToDevice);
     cudaMemcpy(&(u0_dev->content), &u0_dev_content, sizeof(u0_dev->content), cudaMemcpyHostToDevice);
@@ -338,10 +345,12 @@ struct forall_ops {
     dim3 block_shape = dim3(65336, 2);
 
     substep_ix_global<<<block_shape, 1024>>>(res_dev, u_dev, v_dev, u0_dev, u1_dev, u2_dev, substepIx);
+    cudaDeviceSynchronize();
 
     cudaMemcpy(result.content, res_dev_content, sizeof(Float) * TOTAL_PADDED_SIZE, cudaMemcpyDeviceToHost);
-
+    cudaDeviceReset();
     return result;
+
   }
 
   inline Array schedule_threaded(const Array &u, const Array &v,
