@@ -277,11 +277,13 @@ struct array_ops {
 
 // CUDA kernel
 template <class _substepIx>
-__global__ void substep_ix_global(array_ops<float>::Array *res,const array_ops<float>::Array *u, const array_ops<float>::Array *v, const array_ops<float>::Array *u0, const array_ops<float>::Array *u1, const array_ops<float>::Array *u2, _substepIx substepIx) {
+__global__ void substep_ix_global(array_ops<float>::Array *res,const array_ops<float>::Array *u, const array_ops<float>::Array *v, const array_ops<float>::Array *u0, const array_ops<float>::Array *u1, const array_ops<float>::Array *u2) {
 
   int x = blockIdx.x * blockDim.x + threadIdx.x;
   int y = blockIdx.y * blockDim.y + threadIdx.x;
   int i = y*S0+x;
+
+  _substepIx substepIx;
 
   if (i < TOTAL_PADDED_SIZE) {
     res->content[i] = substepIx(*u,*v,*u0,*u1,*u2,i);
@@ -298,18 +300,17 @@ struct forall_ops {
   typedef _Nat Nat;
   typedef _Offset Offset;
 
-  _substepIx substepIx;
-
   inline Nat nbCores() { return Nat(NB_CORES); }
 
   __host__ __device__ inline Array schedule(const Array &u, const Array &v,
       const Array &u0, const Array &u1, const Array &u2) {
     
     dim3 block_shape = dim3(65336, 2);
+  
 
     Array result;
 
-    substep_ix_global<<<block_shape, 1024>>>(result, u, v, u0, u1, u2, substepIx);
+    substep_ix_global<_substepIx><<<block_shape, 1024>>>(result, u, v, u0, u1, u2);
 
     return result;
   }
