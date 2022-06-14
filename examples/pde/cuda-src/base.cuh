@@ -302,68 +302,16 @@ struct forall_ops {
 
   inline Nat nbCores() { return Nat(NB_CORES); }
 
-  __host__ inline Array schedule(const Array &u, const Array &v,
+  __host__ __device__ inline Array schedule(const Array &u, const Array &v,
       const Array &u0, const Array &u1, const Array &u2) {
-    
-    std::cout << "in schedule" << std::endl;
-    Float *u_host_content, *v_host_content, *u0_host_content, *u1_host_content, *u2_host_content;
-
-    Float *u_dev_content, *v_dev_content,
-          *u0_dev_content, *u1_dev_content, *u2_dev_content;
-
-    Float *res_host_content, *res_dev_content;
-
-    u_host_content = u.content;
-    v_host_content = v.content;
-    u0_host_content = u0.content;
-    u1_host_content = u1.content;
-    u2_host_content = u2.content;
-
-    res_host_content = new Float[TOTAL_PADDED_SIZE];
-
-    // memory allocation, messy
-    cudaMalloc((void**)&res_dev_content, sizeof(Float) * TOTAL_PADDED_SIZE);
-    cudaMalloc((void**)&u_dev_content, sizeof(Float) * TOTAL_PADDED_SIZE);
-    cudaMalloc((void**)&v_dev_content, sizeof(Float) * TOTAL_PADDED_SIZE);
-    cudaMalloc((void**)&u0_dev_content, sizeof(Float) * TOTAL_PADDED_SIZE);
-    cudaMalloc((void**)&u1_dev_content, sizeof(Float) * TOTAL_PADDED_SIZE);
-    cudaMalloc((void**)&u2_dev_content, sizeof(Float) * TOTAL_PADDED_SIZE);
-    
-    cudaMemcpy(res_dev_content, res_host_content, sizeof(Float) * TOTAL_PADDED_SIZE, cudaMemcpyHostToDevice);
-    cudaMemcpy(u_dev_content, u_host_content, sizeof(Float) * TOTAL_PADDED_SIZE, cudaMemcpyHostToDevice);
-    cudaMemcpy(v_dev_content, v_host_content, sizeof(Float) * TOTAL_PADDED_SIZE, cudaMemcpyHostToDevice);
-    cudaMemcpy(u0_dev_content, u0_host_content, sizeof(Float) * TOTAL_PADDED_SIZE, cudaMemcpyHostToDevice);
-    cudaMemcpy(u1_dev_content, u1_host_content, sizeof(Float) * TOTAL_PADDED_SIZE, cudaMemcpyHostToDevice);
-    cudaMemcpy(u2_dev_content, u2_host_content, sizeof(Float) * TOTAL_PADDED_SIZE, cudaMemcpyHostToDevice);
-
-    Array *res_dev, *u_dev, *v_dev, *u0_dev, *u1_dev, *u2_dev;
-
-    cudaMalloc((void**)&res_dev, sizeof(*res_dev));
-    cudaMalloc((void**)&u_dev, sizeof(*u_dev));
-    cudaMalloc((void**)&v_dev, sizeof(*v_dev));
-    cudaMalloc((void**)&u0_dev, sizeof(*u0_dev));
-    cudaMalloc((void**)&u1_dev, sizeof(*u1_dev));
-    cudaMalloc((void**)&u2_dev, sizeof(*u2_dev));
-
-    cudaMemcpy(&(res_dev->content), &res_dev_content, sizeof(res_dev->content), cudaMemcpyHostToDevice);
-    cudaMemcpy(&(u_dev->content), &u_dev_content, sizeof(u_dev->content), cudaMemcpyHostToDevice);
-    cudaMemcpy(&(v_dev->content), &v_dev_content, sizeof(v_dev->content), cudaMemcpyHostToDevice);
-    cudaMemcpy(&(u0_dev->content), &u0_dev_content, sizeof(u0_dev->content), cudaMemcpyHostToDevice);
-    cudaMemcpy(&(u1_dev->content), &u1_dev_content, sizeof(u1_dev->content), cudaMemcpyHostToDevice);
-    cudaMemcpy(&(u2_dev->content), &u2_dev_content, sizeof(u2_dev->content), cudaMemcpyHostToDevice);
     
     dim3 block_shape = dim3(65336, 2);
 
-    substep_ix_global<<<block_shape, 1024>>>(res_dev, u_dev, v_dev, u0_dev, u1_dev, u2_dev, substepIx);
-    cudaDeviceSynchronize();
+    Array result;
 
-    cudaMemcpy(res_host_content, res_dev_content, sizeof(*res_host_content), cudaMemcpyDeviceToHost);
+    substep_ix_global<<<block_shape, 1024>>>(result, u, v, u0, u1, u2, substepIx);
 
-    Array result = Array();
-    memcpy(result.content, res_host_content, sizeof(*res_host_content) * TOTAL_PADDED_SIZE);
-    cudaDeviceReset();
     return result;
-
   }
 
   inline Array schedule_threaded(const Array &u, const Array &v,
