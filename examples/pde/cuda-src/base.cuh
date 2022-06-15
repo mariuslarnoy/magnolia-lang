@@ -37,25 +37,124 @@ struct constants {
 template <typename _Float>
 struct array_ops {
   typedef _Float Float;
-  struct Offset { int value; 
-    __host__ __device__ Offset(){} 
+  struct Offset { int value;
+    __host__ __device__ Offset(){}
     __host__ __device__ Offset(const int &v) : value(v) {} };
   struct Axis { size_t value;
-    __host__ __device__ Axis(){} 
+    __host__ __device__ Axis(){}
     __host__ __device__ Axis(const size_t &v) : value(v) {} };
   typedef size_t Index;
-  struct Nat { size_t value; 
-    __host__ __device__ Nat(){} 
+  struct Nat { size_t value;
+    __host__ __device__ Nat(){}
     __host__ __device__ Nat(const size_t &v) : value(v) {} };
 
-  struct Array {
-    Float * content;
-    __host__ __device__ Array() {
-      this -> content = new Float[TOTAL_PADDED_SIZE];
+  struct HostArray {
+    std::unique_ptr<Float[]> content;
+    HostArray() {
+      this->content = std::unique_ptr<Float[]>(new Float[TOTAL_PADDED_SIZE]);
     }
 
-// TODO: FIX THESE
-/*
+    HostArray(const HostArray &other) {
+      this->content = std::unique_ptr<Float[]>(new Float[TOTAL_PADDED_SIZE]);
+      memcpy(this->content.get(), other.content.get(),
+             TOTAL_PADDED_SIZE * sizeof(Float));
+    }
+
+    HostArray(HostArray &&other) {
+        this->content = std::move(other.content);
+    }
+
+    HostArray &operator=(const HostArray &other) {
+      this->content = std::unique_ptr<Float[]>(new Float[TOTAL_PADDED_SIZE]);
+      memcpy(this->content.get(), other.content.get(),
+             TOTAL_PADDED_SIZE * sizeof(Float));
+      return *this;
+    }
+
+    HostArray &operator=(HostArray &&other) {
+        this->content = std::move(other.content);
+        return *this;
+    }
+
+    inline Float operator[](const Index &ix) const {
+      return this->content[ix];
+    }
+
+    inline Float &operator[](const Index &ix) {
+      return this->content[ix];
+    }
+
+    /* OF Pad extension */
+    void replenish_padding() {
+      Float *raw_content = this->content.get();
+
+      // Axis 2
+      if (PAD2 > 0) {
+        for (size_t i = 0; i < S0; ++i) {
+            for (size_t j = 0; j < S1; ++j) {
+                size_t start_offset_padded = (PAD0 + i) * PADDED_S1 * PADDED_S2 +
+                                            (PAD1 + j) * PADDED_S2;
+                Float *start_padded = raw_content + start_offset_padded;
+                // |pad2|s2|pad2|
+                // |s2|pad2|pad2|
+                // |pad2|pad2|s2|
+
+                memcpy(start_padded, start_padded + S2,
+                      PAD2 * sizeof(Float)); // left pad
+                memcpy(start_padded + PAD2 + S2, start_padded + PAD2,
+                      PAD2 * sizeof(Float)); // right pad
+            }
+        }
+      }
+      //std::cout << "overhead: " << end - begin << " [s]" << std::endl;
+
+      // Axis 1
+      if (PAD1 > 0) {
+        for (size_t i = 0; i < S0; i++) {
+            // [ ? <content> ? ]
+            size_t start_offset = (PAD0 + i) * PADDED_S1 * PADDED_S2;
+            Float *start_padded = raw_content + start_offset;
+
+            memcpy(start_padded,
+                  start_padded + PADDED_S1 * PADDED_S2 - 2 * PAD1 * PADDED_S2,
+                  PAD1 * PADDED_S2 * sizeof(Float)); // left pad
+            memcpy(start_padded + PADDED_S1 * PADDED_S2 - PAD1 * PADDED_S2,
+                  start_padded + PAD1 * PADDED_S2,
+                  PAD1 * PADDED_S2 * sizeof(Float)); // right pad
+        }
+      }
+
+      // Axis 0
+      memcpy(raw_content,
+             raw_content + TOTAL_PADDED_SIZE - 2 * PAD0 * PADDED_S1 * PADDED_S2,
+             PAD0 * PADDED_S1 * PADDED_S2 * sizeof(Float)); // left pad
+      memcpy(raw_content + TOTAL_PADDED_SIZE - PAD0 * PADDED_S1 * PADDED_S2,
+             raw_content + PAD0 * PADDED_S1 * PADDED_S2,
+             PAD0 * PADDED_S1 * PADDED_S2 * sizeof(Float)); // right pad
+    }
+  };
+
+  struct DeviceArray {
+    Float *content;
+    __host__ __device__ DeviceArray() {
+      cudaMalloc(&(this->content), TOTAL_PADDED_SIZE * sizeof(Float));
+    }
+
+    __host__ __device__ DeviceArray &operator=(const DeviceArray &other) {
+      cudaMalloc(&(this->content), TOTAL_PADDED_SIZE * sizeof(Float));
+      cudaMemcpy(this->content, other.content,
+                 TOTAL_PADDED_SIZE * sizeof(Float), cudaMemcpyDeviceToDevice);
+      return *this;
+    }
+
+    __host__ __device__ DeviceArray &operator=(const HostArray &host) {
+      cudaMalloc(&(this->content), TOTAL_PADDED_SIZE * sizeof(Float));
+      cudaMemcpy(this->content, host.content.get(),
+                 TOTAL_PADDED_SIZE * sizeof(Float), cudaMemcpyHostToDevice);
+      return *this;
+    }
+
+    /*
     Array(const Array &other) {
       this->content = new Float[TOTAL_PADDED_SIZE];
       memcpy(this->content, other.content,
@@ -65,28 +164,22 @@ struct array_ops {
     Array(Array &&other) {
         this->content = std::move(other.content);
     }
-*/
-    __host__ __device__ Array &operator=(const Array &other) {
-      this->content = new Float[TOTAL_PADDED_SIZE];
-      memcpy(this->content, other.content,
-             TOTAL_PADDED_SIZE * sizeof(Float));
-      return *this;
-    }
 
-    //Array &operator=(Array &&other) {
-    //    this->content = std::move(other.content);
-    //    return *this;
-    //}
+    __host__ __device__ Array &operator=(Array &&other) {
+        this->content = other.content;
+        return *this;
+    }*/
 
     __host__ __device__ inline Float operator[](const Index & ix) const {
-      return this -> content[ix];
+      return this->content[ix];
     }
 
     __host__ __device__ inline Float & operator[](const Index & ix) {
-      return this -> content[ix];
+      return this->content[ix];
     }
 
     /* OF Pad extension */
+    // TODO: this is probably all broken...
     __host__ __device__ void replenish_padding() {
       Float *raw_content = this->content;
 
@@ -136,6 +229,8 @@ struct array_ops {
              PAD0 * PADDED_S1 * PADDED_S2 * sizeof(Float)); // right pad
     }
   };
+
+  typedef DeviceArray Array;
 
   __host__ __device__ inline Float psi(const Index & ix,
     const Array & array) {
@@ -260,7 +355,7 @@ struct array_ops {
       size_t ix_in_subarray = (ix + PADDED_S2 + offset.value) % PADDED_S2;
       return ix_subarray_base * PADDED_S2 + ix_in_subarray;
     }
-    
+
     // TODO: device code does not support exception handling
     //throw "failed at rotating index";
     //std::unreachable();
@@ -302,15 +397,49 @@ struct forall_ops {
 
   inline Nat nbCores() { return Nat(NB_CORES); }
 
-  __host__ __device__ inline Array schedule(const Array &u, const Array &v,
+  // TODO: this is meant to always be called on host, which results in a
+  // warning. Not sure how to fix that easily at the moment.
+  __host__ inline Array schedule(const Array &u, const Array &v,
       const Array &u0, const Array &u1, const Array &u2) {
-    
+
+    std::cout << "in schedule" << std::endl;
     dim3 block_shape = dim3(65336, 2);
-  
 
     Array result;
 
-    substep_ix_global<_substepIx><<<block_shape, 1024>>>(result, u, v, u0, u1, u2);
+    static Array *result_dev = NULL,
+                 *u_dev = NULL,
+                 *v_dev = NULL,
+                 *u0_dev = NULL,
+                 *u1_dev = NULL,
+                 *u2_dev = NULL;
+
+    // Should free that some day, but let's not bother now.
+    if (result_dev == NULL) {
+      // One single cudaMalloc call
+      cudaMalloc(&result_dev, 6 * sizeof(Array));
+      u_dev = result_dev + 1;
+      v_dev = result_dev + 2;
+      u0_dev = result_dev + 3;
+      u1_dev = result_dev + 4;
+      u2_dev = result_dev + 5;
+    }
+
+    Float *result_dev_content;
+    cudaMalloc(&(result_dev_content), TOTAL_PADDED_SIZE * sizeof(Float));
+    const size_t ptrSize = sizeof(result_dev_content);
+    const auto htd = cudaMemcpyHostToDevice;
+    cudaMemcpy(&(result_dev->content), &(result_dev_content), ptrSize, htd);
+    cudaMemcpy(&(u_dev->content), &(u.content), ptrSize, htd);
+    cudaMemcpy(&(v_dev->content), &(v.content), ptrSize, htd);
+    cudaMemcpy(&(u0_dev->content), &(u0.content), ptrSize, htd);
+    cudaMemcpy(&(u1_dev->content), &(u1.content), ptrSize, htd);
+    cudaMemcpy(&(u2_dev->content), &(u2.content), ptrSize, htd);
+
+    substep_ix_global<_substepIx><<<block_shape, 1024>>>(result_dev, u_dev, v_dev, u0_dev, u1_dev, u2_dev);
+
+    cudaMemcpy(&(result.content), &(result_dev->content), ptrSize,
+               cudaMemcpyDeviceToHost);
 
     return result;
   }
@@ -458,7 +587,7 @@ struct forall_ops {
   }
 };
 
-__host__ __device__ inline void dumpsine(array_ops<float>::Array &result) {
+__host__ __device__ inline void dumpsine(array_ops<float>::HostArray &result) {
   double step = 0.01;
   double PI = 3.14159265358979323846;
   double amplitude = 10.0;
@@ -519,17 +648,17 @@ struct scalar_index {
 
 template<typename _Offset, typename _ScalarIndex>
 struct axis_length {
-  
+
   typedef _Offset Offset;
   typedef _ScalarIndex ScalarIndex;
 
-  struct AxisLength { size_t value; 
+  struct AxisLength { size_t value;
     __host__ __device__ AxisLength(size_t i) {this->value = i;}};
 
   __host__ __device__ inline AxisLength shape0() { return AxisLength(PADDED_S0); }
   __host__ __device__ inline AxisLength shape1() { return AxisLength(PADDED_S1); }
   __host__ __device__ inline AxisLength shape2() { return AxisLength(PADDED_S2); }
-  
+
   __host__ __device__ inline ScalarIndex binary_add(const ScalarIndex &six, const Offset &offset) {
     return ScalarIndex(six.value + offset.value);
   }
@@ -549,7 +678,7 @@ struct specialize_base {
   typedef _ScalarIndex ScalarIndex;
 
 
-  __host__ __device__ inline Float psi(const ScalarIndex &i, 
+  __host__ __device__ inline Float psi(const ScalarIndex &i,
     const ScalarIndex &j, const ScalarIndex &k, const Array &a) {
     return a[i.value * PADDED_S1 * PADDED_S2 + j.value * PADDED_S2 + k.value];
     }
@@ -613,7 +742,7 @@ struct padded_schedule {
   _substepIx substepIx;
 
   __host__ __device__ inline Array schedulePadded(const Array &u, const Array &v,
-                              const Array &u0, const Array &u1, 
+                              const Array &u0, const Array &u1,
                               const Array &u2) {
     Array result;
     printf("in schedulePadded\n");
@@ -625,6 +754,7 @@ struct padded_schedule {
         }
       }
     }
+    return result;
   }
 };
 
@@ -706,9 +836,3 @@ struct specialize_psi_ops_2 {
     return 0;
   }
 };
-
-
-
-
-
-
