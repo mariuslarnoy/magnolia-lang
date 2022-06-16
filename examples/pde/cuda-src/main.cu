@@ -1,6 +1,7 @@
 #include <vector>
 
 #include <time.h>
+#include <tuple>
 
 #include "gen/examples/pde/mg-src/pde-cuda.cuh"
 #include "base.cuh"
