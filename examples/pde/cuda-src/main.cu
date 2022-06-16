@@ -1,7 +1,6 @@
 #include <vector>
 
 #include <time.h>
-#include <tuple>
 
 #include "gen/examples/pde/mg-src/pde-cuda.cuh"
 #include "base.cuh"
@@ -28,7 +27,7 @@ int main() {
     auto copyDataToHost = [] (HostArray &arrHostPtr, const Array &arrDevPtr) {
         auto devPtr = arrDevPtr.content;
         auto hostPtr = arrHostPtr.content.get();
-        cudaMemcpy(hostPtr, devPtr, sizeof(Float) * TOTAL_PADDED_SIZE, cudaMemcpyDeviceToHost);
+        gpuErrChk(cudaMemcpy(hostPtr, devPtr, sizeof(Float) * TOTAL_PADDED_SIZE, cudaMemcpyDeviceToHost));
     };
 
     u0 = u0_base;
