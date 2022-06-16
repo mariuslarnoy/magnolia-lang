@@ -52,7 +52,7 @@ int main() {
     cudaEventCreate(&stop);
     cudaEventRecord(start, 0);
     for (size_t i = 0; i < steps; ++i) {
-	    std::cout << "OK HERE" << std::endl;
+//	    std::cout << "OK HERE" << std::endl;
         pde_dnf.step(u0, u1, u2);
 	    copyDataToHost(u0_base, u0);
         copyDataToHost(u1_base, u1);

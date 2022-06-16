@@ -403,7 +403,7 @@ struct forall_ops {
   __host__ inline Array schedule(const Array &u, const Array &v,
       const Array &u0, const Array &u1, const Array &u2) {
 
-    std::cout << "in schedule" << std::endl;
+    //std::cout << "in schedule" << std::endl;
     dim3 block_shape = dim3(65336, 2);
 
     Array result;
